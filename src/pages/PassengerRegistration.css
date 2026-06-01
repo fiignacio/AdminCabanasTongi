@@ -1,0 +1,93 @@
+.passenger-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.invoice-preview-container {
+  color: #3E312A;
+  font-family: var(--font-main);
+  height: 100%;
+  min-height: 800px;
+  background-color: #FAF7F2 !important;
+}
+
+.invoice-header {
+  text-align: center;
+  padding: 2rem;
+  border-bottom: 2px solid #D35400; /* Terracotta */
+}
+
+.invoice-title {
+  color: #3E312A;
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+}
+
+.invoice-subtitle {
+  color: #706258;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.invoice-doc-type {
+  background: #556B2F; /* Sage Green */
+  color: white;
+  padding: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: 1.2rem;
+}
+
+.invoice-body {
+  padding: 2rem;
+}
+
+.invoice-section {
+  margin-bottom: 2rem;
+}
+
+.invoice-section-title {
+  color: #D35400;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(62, 49, 42, 0.1);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.invoice-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoice-table th, .invoice-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.invoice-table th {
+  background: #f8f9fa;
+  color: #666;
+  font-weight: 600;
+}

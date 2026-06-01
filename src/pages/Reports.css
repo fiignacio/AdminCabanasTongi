@@ -1,0 +1,43 @@
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--accent-secondary);
+}
+
+.filter-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.filter-controls {
+  display: flex;
+  gap: 2rem;
+}
+
+.filter-controls .form-group {
+  flex: 1;
+  max-width: 300px;
+}
+
+.report-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.text-success {
+  color: var(--success);
+}
