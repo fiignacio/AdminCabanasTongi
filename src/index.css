@@ -56,6 +56,31 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  position: relative;
+}
+
+.mobile-topbar {
+  display: none;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  z-index: 100;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.sidebar-container {
+  display: contents; /* Desktop: acts as if not there */
+}
+
+.mobile-close-btn {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
 }
 
 .main-content {
@@ -64,6 +89,14 @@ body {
   flex-direction: column;
   padding: 2rem;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Base Responsive Grid Helper */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
 }
 
 /* Typography */
@@ -169,3 +202,100 @@ h1 {
 }
 .badge-alta { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
 .badge-baja { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+
+/* -------------------------------------
+   MEDIA QUERIES (Mobile Responsiveness)
+--------------------------------------- */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .mobile-topbar {
+    display: flex;
+  }
+  
+  .sidebar-container {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 280px;
+    height: 100vh;
+    z-index: 200;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .sidebar-container.open {
+    left: 0;
+  }
+  
+  .mobile-close-btn {
+    display: block;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 201;
+  }
+  
+  /* Reset Sidebar margins inside container */
+  .sidebar-container .sidebar {
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 150;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .sidebar-overlay.open {
+    display: block;
+    opacity: 1;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+  }
+  
+  /* Tables wrapper for scroll */
+  .table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1rem;
+  }
+  
+  /* Form Rows adjustment */
+  .form-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+}

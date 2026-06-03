@@ -15,11 +15,15 @@ import PublicBooking from './pages/PublicBooking';
 import SyncManager from './pages/SyncManager';
 
 function App() {
-  const { fetchFromSupabase } = useStore();
+  const { fetchFromSupabase, initRealtimeSubscription } = useStore();
 
   useEffect(() => {
     fetchFromSupabase();
-  }, [fetchFromSupabase]);
+    const unsubscribe = initRealtimeSubscription();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [fetchFromSupabase, initRealtimeSubscription]);
 
   return (
     <Router>

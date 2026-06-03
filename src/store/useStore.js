@@ -168,6 +168,50 @@ export const useStore = create(
         else if (carResData) {
           set({ carReservations: carResData });
         }
+      },
+
+      // Realtime Sync
+      initRealtimeSubscription: () => {
+        const sb = getSupabase(get().syncConfig);
+        if (!sb) return;
+
+        console.log("Iniciando suscripciones en tiempo real...");
+
+        const handleRealtimeEvent = (table, stateKey) => (payload) => {
+          console.log(`Evento Realtime en ${table}:`, payload);
+          set((state) => {
+            const currentList = state[stateKey];
+            let newList = [...currentList];
+
+            if (payload.eventType === 'INSERT') {
+              // Evitar duplicados
+              if (!newList.find(item => item.id === payload.new.id)) {
+                newList.push(payload.new);
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              newList = newList.map(item => item.id === payload.new.id ? { ...item, ...payload.new } : item);
+            } else if (payload.eventType === 'DELETE') {
+              newList = newList.filter(item => item.id !== payload.old.id);
+            }
+
+            return { [stateKey]: newList };
+          });
+        };
+
+        const channel = sb.channel('public:all')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, handleRealtimeEvent('reservations', 'reservations'))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'cabins' }, handleRealtimeEvent('cabins', 'cabins'))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'cars' }, handleRealtimeEvent('cars', 'cars'))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'car_reservations' }, handleRealtimeEvent('car_reservations', 'carReservations'))
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('✅ Conectado a Supabase Realtime');
+            }
+          });
+        
+        return () => {
+          sb.removeChannel(channel);
+        };
       }
     }),
     {

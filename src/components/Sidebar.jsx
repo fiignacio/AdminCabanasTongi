@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const menuItems = [
     { path: '/admin/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { path: '/admin/calendar', name: 'Cal. Cabañas', icon: <CalendarDays size={20} /> },
@@ -29,6 +29,7 @@ const Sidebar = () => {
             key={item.path} 
             to={item.path} 
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            onClick={onClose}
           >
             {item.icon}
             <span>{item.name}</span>
@@ -40,6 +41,7 @@ const Sidebar = () => {
             to="/" 
             className="nav-item"
             style={{ color: 'var(--accent-secondary)' }}
+            onClick={onClose}
           >
             <Tent size={20} />
             <span>Ver Vista Pública</span>

@@ -236,3 +236,55 @@
 .reservation-bar.blocked .reservation-client {
   color: #4B5563;
 }
+
+/* Responsividad para móviles en el Calendario */
+@media (max-width: 768px) {
+  .calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .calendar-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .current-month {
+    min-width: auto;
+    font-size: 0.9rem;
+  }
+
+  .cabin-name-cell, .cabin-name-header {
+    min-width: 140px;
+    max-width: 140px;
+    padding: 0.5rem;
+  }
+
+  .cabin-name-header {
+    font-size: 0.75rem;
+  }
+
+  .cabin-name-cell strong {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .day-cell {
+    height: 45px;
+  }
+  
+  .calendar-cell {
+    min-width: 40px;
+  }
+  
+  .reservation-bar {
+    padding: 0 0.5rem;
+  }
+  
+  .reservation-client {
+    font-size: 0.7rem;
+  }
+}

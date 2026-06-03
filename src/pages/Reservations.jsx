@@ -254,7 +254,8 @@ const Reservations = () => {
             <p>{showArchived ? 'No hay reservas en el historial.' : 'No hay reservas registradas. ¡Crea la primera!'}</p>
           </div>
         ) : (
-          <table className="reservations-table">
+          <div className="table-responsive-wrapper">
+            <table className="reservations-table">
             <thead>
               <tr>
                 <th>Cliente</th>
@@ -313,6 +314,7 @@ const Reservations = () => {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
