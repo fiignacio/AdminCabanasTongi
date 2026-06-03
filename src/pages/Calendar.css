@@ -250,6 +250,15 @@
     justify-content: space-between;
   }
 
+  .calendar-grid-wrapper {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    width: calc(100% + 2rem);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
   .current-month {
     min-width: auto;
     font-size: 0.9rem;
@@ -278,8 +287,21 @@
   
   .calendar-cell {
     min-width: 40px;
+    padding: 0.5rem 0.15rem;
   }
   
+  .day-header {
+    padding: 0.25rem 0.15rem;
+  }
+
+  .day-header.today {
+    margin: 4px;
+    border-radius: 6px;
+    height: calc(100% - 8px);
+    display: flex;
+    justify-content: center;
+  }
+
   .reservation-bar {
     padding: 0 0.5rem;
   }
