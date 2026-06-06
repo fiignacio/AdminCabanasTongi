@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Lock, FileText } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { calculateReservationCost } from '../utils/pricing';
 import { parseSafeDate } from '../utils/dateUtils';
@@ -7,6 +8,7 @@ import './ReservationModal.css';
 
 const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) => {
   const { cabins, prices, addReservation, updateReservation } = useStore();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     cabinId: '',
@@ -135,6 +137,11 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       addReservation(payload);
     }
     
+    onClose();
+  };
+
+  const handleGenerateCarta = () => {
+    navigate('/admin/tools/passengers', { state: { reservation: formData } });
     onClose();
   };
 
@@ -402,9 +409,24 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
             </>
           )}
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn btn-primary">Guardar</button>
+          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ flex: 1 }}>
+              {!formData.isBlock && (
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  style={{ backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '5px' }} 
+                  onClick={handleGenerateCarta}
+                  title="Ir a generar Carta de Invitación (Los datos actuales se transferirán)"
+                >
+                  <FileText size={16} /> Carta
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="btn btn-primary">Guardar</button>
+            </div>
           </div>
         </form>
       </div>
