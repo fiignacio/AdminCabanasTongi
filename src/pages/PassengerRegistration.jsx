@@ -19,7 +19,6 @@ export default function PassengerRegistration() {
   const [email, setEmail] = useState('');
   const [titular, setTitular] = useState(reservationData?.clientName || '');
   const [passengers, setPassengers] = useState([]);
-  const [passengers, setPassengers] = useState([]);
   
   const invoiceRef = useRef(null);
 
