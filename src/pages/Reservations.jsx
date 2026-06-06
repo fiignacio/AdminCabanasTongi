@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { Plus, Edit2, Trash2, Upload, Archive, ArchiveRestore, Search, FilterX } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Edit2, Trash2, Upload, Archive, ArchiveRestore, Search, FilterX, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useStore } from '../store/useStore';
 import ReservationModal from '../components/ReservationModal';
@@ -15,6 +16,11 @@ const Reservations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
+
+  const handleGenerateCarta = (res) => {
+    navigate('/admin/tools/passengers', { state: { reservation: res } });
+  };
 
   const handleAddNew = () => {
     setEditingReservation(null);
@@ -300,7 +306,10 @@ const Reservations = () => {
                       />
                     </td>
                     <td>
-                      <div className="actions">
+                      <div className="actions" style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn-icon" style={{ color: 'var(--accent-primary)', background: 'rgba(59,130,246,0.1)' }} onClick={() => handleGenerateCarta(res)} title="Carta de Invitación">
+                          <FileText size={18} />
+                        </button>
                         <button className="btn-icon" onClick={() => handleEdit(res)}>
                           <Edit2 size={18} />
                         </button>

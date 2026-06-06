@@ -1,19 +1,24 @@
 import { useState, useRef } from 'react';
-import { Download, Users, FileText, Plane, PlaneTakeoff, PlaneLanding, Mail, Trash2, Plus } from 'lucide-react';
+import { Download, Users, FileText, Plane, PlaneTakeoff, PlaneLanding, Mail, Trash2, Plus, Share2 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import './PassengerRegistration.css';
 
 export default function PassengerRegistration() {
+  const location = useLocation();
+  const reservationData = location.state?.reservation;
+
   const [rawText, setRawText] = useState('');
   
-  // Parsed Form State
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [flightIn, setFlightIn] = useState('');
-  const [flightOut, setFlightOut] = useState('');
+  // Parsed Form State - Inicializado con datos de la reserva si existen
+  const [checkIn, setCheckIn] = useState(reservationData?.startDate || '');
+  const [checkOut, setCheckOut] = useState(reservationData?.endDate || '');
+  const [flightIn, setFlightIn] = useState(reservationData?.flightIn || '');
+  const [flightOut, setFlightOut] = useState(reservationData?.flightOut || '');
   const [email, setEmail] = useState('');
-  const [titular, setTitular] = useState('');
+  const [titular, setTitular] = useState(reservationData?.clientName || '');
+  const [passengers, setPassengers] = useState([]);
   const [passengers, setPassengers] = useState([]);
   
   const invoiceRef = useRef(null);
@@ -28,14 +33,15 @@ export default function PassengerRegistration() {
     let newPassengers = [];
 
     const rutRegex = /\b(\d{1,2}\.?\d{3}\.?\d{3}-[\dkK])\b/gi;
-    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi;
     const dateRegex = /\b(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\b/g;
-    const flightRegex = /\b([A-Za-z0-9]{2,3}\s?\d{3,4})\b/g;
+    const flightRegex = /\b([A-Za-z]{0,2}\s?\d{3,4})\b/g;
 
     let possibleFlights = [];
 
     for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
+      // Limpiar prefijos de WhatsApp como "[22/5, 12:05 p.m.] Nombre:"
+      let line = lines[i].replace(/^\[\d{1,2}[\/\-]\d{1,2}.*?\]\s*.*?:/i, '').trim();
 
       const emailsInLine = line.match(emailRegex);
       if (emailsInLine) foundEmails.push(...emailsInLine);
@@ -43,21 +49,34 @@ export default function PassengerRegistration() {
       const datesInLine = line.match(dateRegex);
       if (datesInLine) foundDates.push(...datesInLine);
 
+      // Mejorar detección de vuelos: ignorar RUTs que parezcan vuelos
       const flightsInLine = line.match(flightRegex);
-      if (flightsInLine) possibleFlights.push(...flightsInLine);
+      if (flightsInLine) {
+        const validFlights = flightsInLine.filter(f => !rutRegex.test(f) && /\d/.test(f));
+        possibleFlights.push(...validFlights);
+      }
 
       const rutsInLine = line.match(rutRegex);
       if (rutsInLine) {
         rutsInLine.forEach(rut => {
-          let name = line.replace(rutRegex, '').replace(emailRegex, '').replace(dateRegex, '').replace(flightRegex, '').trim();
+          let nameRaw = line.replace(rutRegex, '').replace(emailRegex, '').replace(dateRegex, '').trim();
           
-          if (name.length < 3 && i > 0) {
-            name = lines[i-1].replace(emailRegex, '').replace(dateRegex, '').replace(flightRegex, '').trim();
+          // Si la línea con el RUT quedó casi vacía, el nombre probablemente está en la línea anterior
+          if (nameRaw.length < 4 && i > 0) {
+            nameRaw = lines[i-1].replace(/^\[\d{1,2}[\/\-]\d{1,2}.*?\]\s*.*?:/i, '').replace(emailRegex, '').replace(dateRegex, '').trim();
           }
 
-          name = name.replace(/numero de vuelo ida/i, '').replace(/rut/i, '').replace(/pasajero/i, '').trim();
+          // Limpiar palabras clave o ruidos
+          let name = nameRaw.replace(/numero de vuelo ida/gi, '')
+                            .replace(/vuelta/gi, '')
+                            .replace(/rut[:]?/gi, '')
+                            .replace(/pasajero[:]?/gi, '')
+                            .replace(/viajo el.*$/gi, '')
+                            .replace(/carnet.*$/gi, '')
+                            .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '') // Eliminar caracteres especiales y números que no sean letras
+                            .trim();
           
-          if (!name) name = 'Pasajero Sin Nombre';
+          if (name.length < 2) name = 'Pasajero Sin Nombre';
           
           newPassengers.push({ name, rut });
         });
@@ -81,16 +100,29 @@ export default function PassengerRegistration() {
       return dateStr;
     };
 
-    if (foundDates.length >= 1) parsedCheckIn = formatDateForInput(foundDates[0]);
-    if (foundDates.length >= 2) parsedCheckOut = formatDateForInput(foundDates[foundDates.length - 1]);
-    
-    setCheckIn(parsedCheckIn);
-    setCheckOut(parsedCheckOut);
+    if (!checkIn && foundDates.length >= 1) setCheckIn(parsedCheckIn);
+    if (!checkOut && foundDates.length >= 2) setCheckOut(parsedCheckOut);
     
     if (foundEmails.length > 0) setEmail(foundEmails[0]);
 
-    if (possibleFlights.length >= 1) setFlightIn(possibleFlights[0]);
-    if (possibleFlights.length >= 2) setFlightOut(possibleFlights[possibleFlights.length - 1]);
+    // Extraer vuelos del texto si es que hay palabras clave (vuelo, ida, vuelta)
+    const combinedText = lines.join(' ').toLowerCase();
+    const flightMatches = combinedText.match(/(?:vuelo|ida|vuelta).*?\b([A-Za-z]{0,2}\s?\d{3,4})\b/g);
+    
+    if (flightMatches) {
+       flightMatches.forEach(fm => {
+          const numMatch = fm.match(/\b([A-Za-z]{0,2}\s?\d{3,4})\b/);
+          if (numMatch) {
+             const fNum = numMatch[1].replace(/\s/g, '').toUpperCase();
+             if (fm.includes('ida') || fm.includes('llegada')) setFlightIn(fNum);
+             else if (fm.includes('vuelta') || fm.includes('salida')) setFlightOut(fNum);
+          }
+       });
+    } else {
+      // Fallback
+      if (!flightIn && possibleFlights.length >= 1) setFlightIn(possibleFlights[0].toUpperCase());
+      if (!flightOut && possibleFlights.length >= 2) setFlightOut(possibleFlights[possibleFlights.length - 1].toUpperCase());
+    }
 
     if (newPassengers.length > 0) {
       setPassengers(newPassengers);
@@ -135,6 +167,40 @@ export default function PassengerRegistration() {
       
       html2pdf().set(opt).from(element).save().then(() => {
         setIsExporting(false);
+      });
+    }, 150);
+  };
+
+  const handleShare = () => {
+    setIsExporting(true);
+    
+    setTimeout(() => {
+      const element = invoiceRef.current;
+      const opt = {
+        margin: [0.5, 1, 0.5, 1],
+        filename: `Registro_Pasajeros_${titular ? titular.replace(/\s+/g, '_') : 'Sin_Nombre'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FAF7F2' },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      
+      html2pdf().set(opt).from(element).outputPdf('blob').then((pdfBlob) => {
+        setIsExporting(false);
+        const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+            files: [file],
+            title: 'Carta de Invitación - Cabañas Manuara',
+            text: `Adjunto carta de invitación / registro de pasajeros para la reserva de ${titular || ''}.`
+          }).catch(err => {
+            console.error("Error al compartir:", err);
+            // Si el usuario cancela no hacemos nada, pero si falla mostramos algo
+          });
+        } else {
+          alert("Tu dispositivo o navegador no soporta enviar archivos directamente. El archivo se descargará.");
+          handleExportPDF();
+        }
       });
     }, 150);
   };
@@ -317,13 +383,22 @@ export default function PassengerRegistration() {
             </div>
           </div>
           </div>
-          <button 
-            className="btn btn-primary" 
-            style={{ width: '100%', marginTop: '1rem' }}
-            onClick={handleExportPDF}
-          >
-            <Download size={20} /> Exportar Ficha a PDF
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', width: '100%' }}>
+            <button 
+              className="btn btn-primary" 
+              style={{ flex: 1 }}
+              onClick={handleExportPDF}
+            >
+              <Download size={20} /> Guardar
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              style={{ flex: 1, backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none' }}
+              onClick={handleShare}
+            >
+              <Share2 size={20} /> Compartir / Enviar
+            </button>
+          </div>
         </div>
       </div>
     </div>
