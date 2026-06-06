@@ -46,7 +46,14 @@ export default function PassengerRegistration() {
       if (emailsInLine) foundEmails.push(...emailsInLine);
 
       const datesInLine = line.match(dateRegex);
-      if (datesInLine) foundDates.push(...datesInLine);
+      if (datesInLine && !/nacimiento/i.test(line)) {
+        const validDates = datesInLine.filter(d => {
+          const parts = d.split(/[\/\-]/);
+          if (parts.length === 3 && parts[2].length === 4 && parseInt(parts[2]) < 2024) return false;
+          return true;
+        });
+        foundDates.push(...validDates);
+      }
 
       // Mejorar detección de vuelos: ignorar RUTs que parezcan vuelos
       const flightsInLine = line.match(flightRegex);
@@ -60,13 +67,16 @@ export default function PassengerRegistration() {
         rutsInLine.forEach(rut => {
           let nameRaw = line.replace(rutRegex, '').replace(emailRegex, '').replace(dateRegex, '').trim();
           
-          // Si la línea con el RUT quedó casi vacía, el nombre probablemente está en la línea anterior
-          if (nameRaw.length < 4 && i > 0) {
+          // Si la línea con el RUT quedó casi vacía (ej: "Rut :" -> length 5), el nombre probablemente está en la línea anterior
+          const cleanedLength = nameRaw.replace(/rut|:|pasajero/gi, '').trim().length;
+          if (cleanedLength < 4 && i > 0) {
             nameRaw = lines[i-1].replace(/^\[\d{1,2}[\/\-]\d{1,2}.*?\]\s*.*?:/i, '').replace(emailRegex, '').replace(dateRegex, '').trim();
           }
 
           // Limpiar palabras clave o ruidos
-          let name = nameRaw.replace(/numero de vuelo ida/gi, '')
+          let name = nameRaw.replace(/nombre completo/gi, '')
+                            .replace(/nombre[:]?/gi, '')
+                            .replace(/numero de vuelo ida/gi, '')
                             .replace(/vuelta/gi, '')
                             .replace(/rut[:]?/gi, '')
                             .replace(/pasajero[:]?/gi, '')
