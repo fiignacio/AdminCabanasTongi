@@ -7,9 +7,13 @@ import './SyncManager.css';
 export default function SyncManager() {
   const { syncConfig, updateSyncConfig } = useStore();
   
+  const envUrl = import.meta.env.VITE_SUPABASE_URL;
+  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const hasEnvVars = Boolean(envUrl && envKey);
+
   // Local state for forms
-  const [supabaseUrl, setSupabaseUrl] = useState(syncConfig.supabaseUrl || '');
-  const [supabaseKey, setSupabaseKey] = useState(syncConfig.supabaseKey || '');
+  const [supabaseUrl, setSupabaseUrl] = useState(envUrl || syncConfig.supabaseUrl || '');
+  const [supabaseKey, setSupabaseKey] = useState(envKey || syncConfig.supabaseKey || '');
   const [googleClientId, setGoogleClientId] = useState(syncConfig.googleClientId || '');
   
   // Status states
@@ -19,14 +23,17 @@ export default function SyncManager() {
   // Test Supabase connection
   useEffect(() => {
     const testConnection = async () => {
-      if (!syncConfig.supabaseUrl || !syncConfig.supabaseKey) {
+      const targetUrl = envUrl || syncConfig.supabaseUrl;
+      const targetKey = envKey || syncConfig.supabaseKey;
+
+      if (!targetUrl || !targetKey) {
         setSupabaseStatus('disconnected');
         return;
       }
       
       try {
         setSupabaseStatus('checking');
-        const supabase = createClient(syncConfig.supabaseUrl, syncConfig.supabaseKey);
+        const supabase = createClient(targetUrl, targetKey);
         
         // Intentar hacer una consulta simple para verificar la conexión
         // Asumimos que la tabla de reservas podría no existir aún, pero el cliente debería poder inicializarse y hacer ping.
@@ -105,11 +112,12 @@ export default function SyncManager() {
             <div className="form-group">
               <label className="form-label"><LinkIcon size={16} style={{ display: 'inline', verticalAlign: 'text-bottom' }}/> Supabase Project URL</label>
               <input 
-                type="text" 
+                type={hasEnvVars ? "text" : "text"}
                 className="form-input" 
                 placeholder="https://xyzcompany.supabase.co" 
-                value={supabaseUrl}
+                value={hasEnvVars ? '*********************** (Por Entorno)' : supabaseUrl}
                 onChange={(e) => setSupabaseUrl(e.target.value)}
+                disabled={hasEnvVars}
               />
             </div>
             
@@ -119,8 +127,9 @@ export default function SyncManager() {
                 type="password" 
                 className="form-input" 
                 placeholder="eyJhbGciOiJIUzI1NiIsInR5c..." 
-                value={supabaseKey}
+                value={hasEnvVars ? '**************************************************************' : supabaseKey}
                 onChange={(e) => setSupabaseKey(e.target.value)}
+                disabled={hasEnvVars}
               />
             </div>
             
@@ -130,13 +139,16 @@ export default function SyncManager() {
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-              Guardar Credenciales de Supabase
+            <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={hasEnvVars}>
+              {hasEnvVars ? 'Bloqueado (Seguridad de Variables de Entorno Activa)' : 'Guardar Credenciales de Supabase'}
             </button>
           </form>
           
           <div className="help-text" style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
-            <strong>¿No tienes claves?</strong> Crea un proyecto gratuito en <a href="https://supabase.com/" target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)' }}>supabase.com</a>, ve a Project Settings &gt; API y copia la URL y la llave 'anon public'.
+            {hasEnvVars 
+              ? <span><strong>¡Seguridad Máxima!</strong> Las credenciales están protegidas y gestionadas por variables de entorno en el servidor de despliegue.</span>
+              : <span><strong>¿No tienes claves?</strong> Crea un proyecto gratuito en <a href="https://supabase.com/" target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)' }}>supabase.com</a>, ve a Project Settings &gt; API y copia la URL y la llave 'anon public'.</span>
+            }
           </div>
         </div>
 

@@ -4,8 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 
 // Helper function to get supabase instance if configured
 const getSupabase = (config) => {
-  if (config?.supabaseUrl && config?.supabaseKey) {
-    return createClient(config.supabaseUrl, config.supabaseKey);
+  const url = import.meta.env.VITE_SUPABASE_URL || config?.supabaseUrl;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY || config?.supabaseKey;
+  if (url && key) {
+    return createClient(url, key);
   }
   return null;
 };
@@ -126,8 +128,8 @@ export const useStore = create(
       },
       // Sync Configurations
       syncConfig: {
-        supabaseUrl: '',
-        supabaseKey: '',
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
+        supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
         googleClientId: ''
       },
       updateSyncConfig: (newConfig) => set((state) => ({
