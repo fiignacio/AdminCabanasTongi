@@ -136,6 +136,57 @@ export const useStore = create(
         syncConfig: { ...state.syncConfig, ...newConfig }
       })),
 
+      // Auth State
+      user: null,
+      session: null,
+      authError: null,
+      isAuthChecking: true,
+
+      login: async (email, password) => {
+        const sb = getSupabase(get().syncConfig);
+        if (!sb) {
+          set({ authError: 'No hay conexión a la base de datos' });
+          return false;
+        }
+        
+        try {
+          const { data, error } = await sb.auth.signInWithPassword({ email, password });
+          if (error) {
+            set({ authError: error.message });
+            return false;
+          }
+          set({ user: data.user, session: data.session, authError: null });
+          return true;
+        } catch (err) {
+          set({ authError: err.message });
+          return false;
+        }
+      },
+
+      logout: async () => {
+        const sb = getSupabase(get().syncConfig);
+        if (sb) {
+          await sb.auth.signOut();
+        }
+        set({ user: null, session: null });
+      },
+
+      checkSession: async () => {
+        const sb = getSupabase(get().syncConfig);
+        if (!sb) {
+          set({ isAuthChecking: false });
+          return;
+        }
+
+        const { data: { session } } = await sb.auth.getSession();
+        set({ session, user: session?.user || null, isAuthChecking: false });
+
+        // Listen for auth changes
+        sb.auth.onAuthStateChange((_event, session) => {
+          set({ session, user: session?.user || null });
+        });
+      },
+
       // Pull from Supabase
       fetchFromSupabase: async () => {
         const sb = getSupabase(get().syncConfig);

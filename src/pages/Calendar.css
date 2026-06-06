@@ -11,6 +11,12 @@
   margin-bottom: 2rem;
 }
 
+.calendar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .calendar-controls {
   display: flex;
   align-items: center;
@@ -243,11 +249,28 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .calendar-header-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .calendar-header-actions button.btn-primary {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1.05rem;
   }
   
   .calendar-controls {
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
   }
 
   .calendar-grid-wrapper {

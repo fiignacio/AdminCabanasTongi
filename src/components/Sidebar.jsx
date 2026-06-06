@@ -1,8 +1,16 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut } from 'lucide-react';
+import { useStore } from '../store/useStore';
 import './Sidebar.css';
 
 const Sidebar = ({ onClose }) => {
+  const { logout } = useStore();
+
+  const handleLogout = async () => {
+    await logout();
+    if (onClose) onClose();
+  };
+
   const menuItems = [
     { path: '/admin/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { path: '/admin/calendar', name: 'Cal. Cabañas', icon: <CalendarDays size={20} /> },
@@ -46,6 +54,14 @@ const Sidebar = ({ onClose }) => {
             <Tent size={20} />
             <span>Ver Vista Pública</span>
           </NavLink>
+          <button 
+            onClick={handleLogout}
+            className="nav-item"
+            style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', marginTop: '0.5rem' }}
+          >
+            <LogOut size={20} />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       </nav>
     </aside>

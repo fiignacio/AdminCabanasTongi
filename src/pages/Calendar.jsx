@@ -206,7 +206,7 @@ const Calendar = () => {
       <div className="calendar-header">
         <h1>Calendario de Disponibilidad</h1>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="calendar-header-actions">
           <button className="btn btn-primary btn-sm" onClick={() => {
             setEditingRes(null);
             setInitialDataForModal(null);
