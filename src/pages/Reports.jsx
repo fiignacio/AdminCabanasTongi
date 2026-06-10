@@ -192,10 +192,10 @@ const Reports = () => {
                   <tr key={res.id}>
                     <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444' }}>{res.clientName}</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444' }}>{cabin?.name}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{formatSafeDate(res.startDate, 'dd-MM-yyyy')}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{formatSafeDate(res.endDate, 'dd-MM-yyyy')}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{res.flightIn || '-'}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{res.flightOut || '-'}</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{formatSafeDate(res.startDate, 'dd-MM-yyyy').replace(/-/g, '\u2011')}</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{formatSafeDate(res.endDate, 'dd-MM-yyyy').replace(/-/g, '\u2011')}</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{res.flightIn || '\u2011'}</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{res.flightOut || '\u2011'}</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', textAlign: 'center' }}>{res.adults || 0}</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', textAlign: 'center' }}>{res.childrenCount || 0}</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', textAlign: 'center' }}>{res.babiesCount || 0}</td>
