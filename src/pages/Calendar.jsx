@@ -312,11 +312,17 @@ const Calendar = () => {
 
                       if (dayReservations.length > 1) {
                          if (isEnd) {
-                             barClasses += ' end-day half-left';
+                             barClasses += ' end-day';
                              customStyle.zIndex = 2;
+                             customStyle.right = '50%';
+                             customStyle.borderTopRightRadius = '999px';
+                             customStyle.borderBottomRightRadius = '999px';
                          } else if (isStart) {
-                             barClasses += ' start-day half-right';
+                             barClasses += ' start-day';
                              customStyle.zIndex = 3;
+                             customStyle.left = '50%';
+                             customStyle.borderTopLeftRadius = '999px';
+                             customStyle.borderBottomLeftRadius = '999px';
                          }
                       } else {
                          if (isStart) barClasses += ' start-day';
