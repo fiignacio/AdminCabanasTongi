@@ -35,13 +35,20 @@ export const useStore = create(
         set((state) => ({ cabins: [...state.cabins, newCabin] }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cabins').insert([newCabin]).then(({error}) => error && console.error(error));
+        if (sb) sb.from('cabins').insert([newCabin]).then(({error}) => {
+            if (error) {
+                console.error(error);
+                alert("Error base de datos (Cabañas): " + error.message);
+            }
+        });
       },
       updateCabin: (id, updatedData) => {
         set((state) => ({ cabins: state.cabins.map(c => c.id === id ? { ...c, ...updatedData } : c) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cabins').update(updatedData).eq('id', id).then(({error}) => error && console.error(error));
+        if (sb) sb.from('cabins').update(updatedData).eq('id', id).then(({error}) => {
+            if (error) alert("Error base de datos (Actualizar Cabaña): " + error.message);
+        });
       },
       deleteCabin: (id) => {
         set((state) => ({ cabins: state.cabins.filter(c => c.id !== id) }));
@@ -56,13 +63,23 @@ export const useStore = create(
         set((state) => ({ reservations: [...state.reservations, newRes] }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('reservations').insert([newRes]).then(({error}) => error && console.error(error));
+        if (sb) sb.from('reservations').insert([newRes]).then(({error}) => {
+            if (error) {
+                console.error(error);
+                alert("Error base de datos (Crear Reserva): " + error.message + "\n\n(Probablemente falten las columnas de abonos en tu Supabase. Revisa el Walkthrough).");
+            }
+        });
       },
       updateReservation: (id, updatedData) => {
         set((state) => ({ reservations: state.reservations.map(res => res.id === id ? { ...res, ...updatedData } : res) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('reservations').update(updatedData).eq('id', id).then(({error}) => error && console.error(error));
+        if (sb) sb.from('reservations').update(updatedData).eq('id', id).then(({error}) => {
+            if (error) {
+                console.error(error);
+                alert("Error base de datos (Actualizar Reserva): " + error.message);
+            }
+        });
       },
       deleteReservation: (id) => {
         set((state) => ({ reservations: state.reservations.filter(res => res.id !== id) }));
