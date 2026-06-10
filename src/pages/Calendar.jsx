@@ -352,11 +352,11 @@ const Calendar = () => {
                           onMouseLeave={() => setPopover({ visible: false, res: null, x: 0, y: 0 })}
                         >
                           {isStart && !isBlock && (
-                            <span className="reservation-client" style={{ maxWidth: `calc(${nights} * 40px - 10px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }}>
+                            <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }}>
                               {res.clientName} ({Number(res.adults || 0) + Number(res.childrenCount || 0) + Number(res.babiesCount || 0)} pax)
                             </span>
                           )}
-                          {isStart && isBlock && <span className="reservation-client" style={{ maxWidth: `calc(${nights} * 40px - 10px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: '#fff' }}>Bloqueado</span>}
+                          {isStart && isBlock && <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: '#fff' }}>Bloqueado</span>}
                         </div>
                       );
                     })}
