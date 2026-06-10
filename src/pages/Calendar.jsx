@@ -127,8 +127,8 @@ const Calendar = () => {
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [dragCreate]);
 
-  const getReservationForDay = (cabinId, day) => {
-    return reservations.filter(res => res.status !== 'archived').find(res => {
+  const getReservationsForDay = (cabinId, day) => {
+    return reservations.filter(res => res.status !== 'archived').filter(res => {
       if (res.cabinId !== cabinId) return false;
       const start = startOfDay(parseSafeDate(res.startDate));
       const end = startOfDay(parseSafeDate(res.endDate));
@@ -263,7 +263,7 @@ const Calendar = () => {
               </div>
               
               {daysInMonth.map(day => {
-                const res = getReservationForDay(cabin.id, day);
+                const dayReservations = getReservationsForDay(cabin.id, day);
                 const currentDay = startOfDay(day);
                 
                 // Determinar si esta celda está siendo "dibujada" por el Swipe-to-Select
@@ -277,7 +277,7 @@ const Calendar = () => {
                 
                 const isTodayCol = isSameDay(day, new Date());
                 
-                if (!res) {
+                if (dayReservations.length === 0) {
                   return (
                     <div 
                       key={day.toISOString()} 
@@ -291,12 +291,6 @@ const Calendar = () => {
                   );
                 }
 
-                const isBlock = res.status === 'blocked';
-                const resStart = startOfDay(parseSafeDate(res.startDate));
-                const resEnd = startOfDay(parseSafeDate(res.endDate));
-                const isStart = isSameDay(resStart, currentDay);
-                const isEnd = isSameDay(resEnd, currentDay);
-
                 return (
                   <div 
                     key={day.toISOString()} 
@@ -304,36 +298,61 @@ const Calendar = () => {
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, cabin.id, day)}
                   >
-                    <div 
-                      className={`reservation-bar ${isStart ? 'start-day' : ''} ${isEnd ? 'end-day' : ''} ${isBlock ? 'blocked' : ''}`}
-                      style={
-                        isBlock 
-                          ? { background: 'linear-gradient(135deg, #706258, #3E312A)', cursor: 'pointer' } 
-                          : { backgroundColor: cabin.color || 'var(--accent-primary)', cursor: 'pointer' }
+                    {dayReservations.map((res, index) => {
+                      const isBlock = res.status === 'blocked';
+                      const resStart = startOfDay(parseSafeDate(res.startDate));
+                      const resEnd = startOfDay(parseSafeDate(res.endDate));
+                      const isStart = isSameDay(resStart, currentDay);
+                      const isEnd = isSameDay(resEnd, currentDay);
+
+                      let barClasses = `reservation-bar ${isBlock ? 'blocked' : ''}`;
+                      let customStyle = isBlock 
+                        ? { background: 'linear-gradient(135deg, #706258, #3E312A)', cursor: 'pointer' } 
+                        : { backgroundColor: cabin.color || 'var(--accent-primary)', cursor: 'pointer' };
+
+                      if (dayReservations.length > 1) {
+                         if (isEnd) {
+                             barClasses += ' end-day half-left';
+                             customStyle.zIndex = 2;
+                         } else if (isStart) {
+                             barClasses += ' start-day half-right';
+                             customStyle.zIndex = 3;
+                         }
+                      } else {
+                         if (isStart) barClasses += ' start-day';
+                         if (isEnd) barClasses += ' end-day';
                       }
-                      draggable={true}
-                      onMouseDown={(e) => e.stopPropagation()} // Evitar paneo al interactuar con reservas
-                      onClick={() => {
-                        if (dragCreate.active) return;
-                        setPopover({ visible: false, res: null, x: 0, y: 0 });
-                        setEditingRes(res);
-                        setIsModalOpen(true);
-                      }}
-                      onDragStart={(e) => handleDragStart(e, res.id)}
-                      onMouseEnter={(e) => {
-                        if (dragCreate.active) return;
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setPopover({ visible: true, res, x: e.clientX, y: rect.top - 10 });
-                      }}
-                      onMouseLeave={() => setPopover({ visible: false, res: null, x: 0, y: 0 })}
-                    >
-                      {isStart && !isBlock && (
-                        <span className="reservation-client">
-                          {res.clientName} ({Number(res.adults || 0) + Number(res.childrenCount || 0) + Number(res.babiesCount || 0)} pax)
-                        </span>
-                      )}
-                      {isStart && isBlock && <span className="reservation-client" style={{ color: '#fff' }}>Bloqueado</span>}
-                    </div>
+
+                      return (
+                        <div 
+                          key={res.id}
+                          className={barClasses}
+                          style={customStyle}
+                          draggable={true}
+                          onMouseDown={(e) => e.stopPropagation()} // Evitar paneo al interactuar con reservas
+                          onClick={() => {
+                            if (dragCreate.active) return;
+                            setPopover({ visible: false, res: null, x: 0, y: 0 });
+                            setEditingRes(res);
+                            setIsModalOpen(true);
+                          }}
+                          onDragStart={(e) => handleDragStart(e, res.id)}
+                          onMouseEnter={(e) => {
+                            if (dragCreate.active) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setPopover({ visible: true, res, x: e.clientX, y: rect.top - 10 });
+                          }}
+                          onMouseLeave={() => setPopover({ visible: false, res: null, x: 0, y: 0 })}
+                        >
+                          {isStart && !isBlock && (
+                            <span className="reservation-client">
+                              {res.clientName} ({Number(res.adults || 0) + Number(res.childrenCount || 0) + Number(res.babiesCount || 0)} pax)
+                            </span>
+                          )}
+                          {isStart && isBlock && <span className="reservation-client" style={{ color: '#fff' }}>Bloqueado</span>}
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}

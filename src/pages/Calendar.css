@@ -222,6 +222,18 @@
   right: 4px;
 }
 
+.reservation-bar.half-left {
+  right: 50% !important;
+  border-top-right-radius: 999px !important;
+  border-bottom-right-radius: 999px !important;
+}
+
+.reservation-bar.half-right {
+  left: 50% !important;
+  border-top-left-radius: 999px !important;
+  border-bottom-left-radius: 999px !important;
+}
+
 .reservation-client {
   color: white;
   font-size: 0.75rem;
