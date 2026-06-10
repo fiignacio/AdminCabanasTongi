@@ -15,6 +15,7 @@ const Reservations = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -197,6 +198,10 @@ const Reservations = () => {
     }
     
     return true;
+  }).sort((a, b) => {
+    const timeA = new Date(a.startDate).getTime();
+    const timeB = new Date(b.startDate).getTime();
+    return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
   });
 
   return (
@@ -246,6 +251,15 @@ const Reservations = () => {
             onChange={(e) => setFilterDate(e.target.value)}
             style={{ width: 'auto', padding: '0.5rem' }}
           />
+          <select 
+            className="form-input" 
+            value={sortOrder} 
+            onChange={(e) => setSortOrder(e.target.value)}
+            style={{ padding: '0.5rem', width: 'auto', cursor: 'pointer' }}
+          >
+            <option value="asc">Orden: Próximas primero</option>
+            <option value="desc">Orden: Más lejanas primero</option>
+          </select>
           {(searchTerm || filterDate) && (
             <button className="btn-icon" onClick={() => { setSearchTerm(''); setFilterDate(''); }} title="Limpiar filtros">
               <FilterX size={20} color="var(--danger)" />
