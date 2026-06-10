@@ -31,7 +31,7 @@ export const useStore = create(
         { id: '4', name: 'Cabaña Mediana 2', type: 'medium', maxCapacity: 4, ownerId: 'owner2', ownerName: 'Dueño 2', color: '#CD853F' }
       ],
       addCabin: (cabin) => {
-        const newCabin = { ...cabin, id: Date.now().toString() };
+        const newCabin = { ...cabin, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
         set((state) => ({ cabins: [...state.cabins, newCabin] }));
         
         const sb = getSupabase(get().syncConfig);
@@ -59,7 +59,7 @@ export const useStore = create(
       
       reservations: [],
       addReservation: (reservation) => {
-        const newRes = { ...reservation, id: Date.now().toString() };
+        const newRes = { ...reservation, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
         set((state) => ({ reservations: [...state.reservations, newRes] }));
         
         const sb = getSupabase(get().syncConfig);
@@ -93,7 +93,7 @@ export const useStore = create(
         { id: 'c2', name: 'Nissan X-Trail', plate: 'XY-ZA-99', dailyRate: 65000, color: '#2980b9', isActive: true, promoThresholdDays: 0, promoDailyRate: 0 }
       ],
       addCar: (car) => {
-        const newCar = { ...car, id: Date.now().toString() };
+        const newCar = { ...car, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
         set((state) => ({ cars: [...state.cars, newCar] }));
         
         const sb = getSupabase(get().syncConfig);
@@ -125,7 +125,7 @@ export const useStore = create(
       // CAR RESERVATIONS
       carReservations: [],
       addCarReservation: (res) => {
-        const newRes = { ...res, id: Date.now().toString() };
+        const newRes = { ...res, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
         set((state) => ({ carReservations: [...state.carReservations, newRes] }));
         
         const sb = getSupabase(get().syncConfig);
