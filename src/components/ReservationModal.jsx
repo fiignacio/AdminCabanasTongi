@@ -7,7 +7,7 @@ import { parseSafeDate } from '../utils/dateUtils';
 import './ReservationModal.css';
 
 const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) => {
-  const { cabins, prices, addReservation, updateReservation } = useStore();
+  const { cabins, prices, addReservation, updateReservation, reservations } = useStore();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -121,6 +121,25 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
 
     if (parseSafeDate(formData.startDate) >= parseSafeDate(formData.endDate)) {
       setError('La fecha de salida debe ser posterior a la de entrada.');
+      return;
+    }
+
+    const start = parseSafeDate(formData.startDate);
+    const end = parseSafeDate(formData.endDate);
+    
+    const isOverlap = reservations.some(res => {
+      if (res.status === 'archived') return false;
+      if (reservationToEdit && res.id === reservationToEdit.id) return false;
+      if (res.cabinId !== formData.cabinId) return false;
+
+      const resStart = parseSafeDate(res.startDate);
+      const resEnd = parseSafeDate(res.endDate);
+      
+      return start < resEnd && end > resStart;
+    });
+
+    if (isOverlap) {
+      setError('La cabaña ya está reservada o bloqueada en estas fechas. Elige otra.');
       return;
     }
 
