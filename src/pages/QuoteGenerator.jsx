@@ -3,7 +3,7 @@ import { Download, Calendar, Users, Car, Moon, Sun } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useStore } from '../store/useStore';
+import { useStore, getSupabase } from '../store/useStore';
 import { generateWhatsAppLink, generateQuoteMessage } from '../utils/whatsapp';
 import './QuoteGenerator.css';
 
@@ -55,26 +55,25 @@ export default function QuoteGenerator() {
   };
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const getPdfOptions = () => ({
+    margin: [0.5, 1, 0.5, 1], // Superior, Derecho, Inferior, Izquierdo
+    filename: `Presupuesto_Cabanas_${titular ? titular.replace(/\s+/g, '_') : 'Sin_Nombre'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true, 
+      backgroundColor: '#FAF7F2'
+    },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  });
 
   const handleExportPDF = () => {
     setIsExporting(true);
-    
     setTimeout(() => {
       const element = invoiceRef.current;
-      
-      const opt = {
-        margin: [0.5, 1, 0.5, 1], // Superior, Derecho, Inferior, Izquierdo
-        filename: `Presupuesto_Cabanas_${titular ? titular.replace(/\s+/g, '_') : 'Sin_Nombre'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          backgroundColor: '#FAF7F2'
-        },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      
-      html2pdf().set(opt).from(element).save().then(() => {
+      html2pdf().set(getPdfOptions()).from(element).save().then(() => {
         setIsExporting(false);
       });
     }, 150);
@@ -86,15 +85,67 @@ export default function QuoteGenerator() {
       return;
     }
     
-    // Primero generar el PDF
-    handleExportPDF();
+    setIsUploading(true);
+    setIsExporting(true);
     
-    // Y luego abrir WhatsApp con las instrucciones
-    setTimeout(() => {
-      alert("El presupuesto en PDF se ha descargado a tu equipo.\n\nA continuación se abrirá WhatsApp. Por favor, adjunta el PDF descargado en el chat para enviarlo.");
-      const link = generateWhatsAppLink(clientPhone, generateQuoteMessage(titular));
-      window.open(link, '_blank', 'noopener,noreferrer');
-    }, 500);
+    setTimeout(async () => {
+      try {
+        const element = invoiceRef.current;
+        const options = getPdfOptions();
+        
+        // Generar Blob
+        const pdfWorker = html2pdf().set(options).from(element);
+        const pdfBlob = await pdfWorker.output('blob');
+        
+        // 1. Descargar localmente
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = options.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+
+        // 2. Subir a Supabase Storage
+        const sb = getSupabase(useStore.getState().syncConfig);
+        if (!sb) {
+          throw new Error("No hay conexión a Supabase. No se pudo subir el archivo.");
+        }
+
+        const fileName = `${Date.now()}_${options.filename}`;
+        const { error: uploadError } = await sb.storage
+          .from('quotes')
+          .upload(fileName, pdfBlob, {
+            contentType: 'application/pdf',
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // 3. Obtener URL Pública
+        const { data: publicUrlData } = sb.storage
+          .from('quotes')
+          .getPublicUrl(fileName);
+
+        const pdfPublicUrl = publicUrlData.publicUrl;
+
+        // 4. Abrir WhatsApp
+        const waMessage = generateQuoteMessage(titular, pdfPublicUrl);
+        const waLink = generateWhatsAppLink(clientPhone, waMessage);
+        window.open(waLink, '_blank', 'noopener,noreferrer');
+
+      } catch (err) {
+        console.error("Error al procesar la cotización:", err);
+        alert(`Ocurrió un error al subir el archivo: ${err.message}`);
+      } finally {
+        setIsUploading(false);
+        setIsExporting(false);
+      }
+    }, 150);
   };
 
   const handleStartDateChange = (e) => {
@@ -346,16 +397,17 @@ export default function QuoteGenerator() {
           </div>
           
           <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
-            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleExportPDF}>
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleExportPDF} disabled={isExporting}>
               <Download size={20} /> Exportar PDF
             </button>
             <button 
               className="btn btn-primary" 
-              style={{ flex: 1, backgroundColor: '#25D366', borderColor: '#25D366', color: 'white' }} 
+              style={{ flex: 1, backgroundColor: '#25D366', borderColor: '#25D366', color: 'white', opacity: isUploading ? 0.7 : 1 }} 
               onClick={handleWhatsAppQuote}
+              disabled={isUploading}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-              Enviar Cotización
+              {isUploading ? 'Procesando y Subiendo...' : 'Enviar Cotización'}
             </button>
           </div>
         </div>

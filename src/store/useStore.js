@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { createClient } from '@supabase/supabase-js';
 
 // Helper function to get supabase instance if configured
-const getSupabase = (config) => {
+export const getSupabase = (config) => {
   const url = import.meta.env.VITE_SUPABASE_URL || config?.supabaseUrl;
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY || config?.supabaseKey;
   if (url && key) {

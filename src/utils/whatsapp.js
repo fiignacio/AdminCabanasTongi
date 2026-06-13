@@ -83,6 +83,11 @@ export const generateCarMessage = (res, carName, template = 'confirmation') => {
   return msg;
 };
 
-export const generateQuoteMessage = (titular) => {
-  return `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe adjunto en este chat el *Documento PDF* con la cotización formal de tu estadía en Cabañas Manuara, incluyendo el desglose detallado de huéspedes y extras.\n\nRevisa el archivo adjunto y cualquier duda me avisas para poder agendar tu reserva. ¡Quedo atento/a!`;
+export const generateQuoteMessage = (titular, pdfUrl = '') => {
+  let msg = `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe envío la cotización formal de tu estadía en Cabañas Manuara, incluyendo el desglose detallado de huéspedes y extras.\n\n`;
+  if (pdfUrl) {
+    msg += `📄 *Ver y descargar Cotización:* ${pdfUrl}\n\n`;
+  }
+  msg += `Revisa el documento y cualquier duda me avisas para poder agendar tu reserva. ¡Quedo atento/a!`;
+  return msg;
 };
