@@ -4,15 +4,17 @@ import { Plus, Edit2, Trash2, Upload, Archive, ArchiveRestore, Search, FilterX, 
 import * as XLSX from 'xlsx';
 import { useStore } from '../store/useStore';
 import ReservationModal from '../components/ReservationModal';
+import WhatsAppModal from '../components/WhatsAppModal';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
 import { calculateReservationCost } from '../utils/pricing';
-import { generateWhatsAppLink, generateCabinMessage } from '../utils/whatsapp';
 import './Reservations.css';
 
 const Reservations = () => {
   const { reservations, cabins, prices, deleteReservation, addReservation, updateReservation } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
+  const [waModalOpen, setWaModalOpen] = useState(false);
+  const [waReservation, setWaReservation] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
@@ -32,6 +34,11 @@ const Reservations = () => {
   const handleEdit = (res) => {
     setEditingReservation(res);
     setIsModalOpen(true);
+  };
+
+  const handleOpenWhatsApp = (res) => {
+    setWaReservation(res);
+    setWaModalOpen(true);
   };
 
   const handleDelete = (id) => {
@@ -323,16 +330,15 @@ const Reservations = () => {
                     <td>
                       <div className="actions" style={{ display: 'flex', gap: '0.5rem' }}>
                         {res.clientPhone && !res.isBlock && (
-                          <a 
-                            href={generateWhatsAppLink(res.clientPhone, generateCabinMessage(res, getCabinName(res.cabinId)))} 
-                            target="_blank" 
-                            rel="noreferrer"
+                          <button 
+                            type="button"
+                            onClick={() => handleOpenWhatsApp(res)}
                             className="btn-icon" 
                             style={{ color: '#25D366', background: 'rgba(37,211,102,0.1)' }} 
                             title="Enviar WhatsApp"
                           >
                             <MessageCircle size={18} />
-                          </a>
+                          </button>
                         )}
                         <button className="btn-icon" style={{ color: 'var(--accent-primary)', background: 'rgba(59,130,246,0.1)' }} onClick={() => handleGenerateCarta(res)} title="Carta de Invitación">
                           <FileText size={18} />
@@ -358,6 +364,14 @@ const Reservations = () => {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         reservationToEdit={editingReservation}
+      />
+
+      <WhatsAppModal 
+        isOpen={waModalOpen}
+        onClose={() => setWaModalOpen(false)}
+        reservation={waReservation}
+        type="cabin"
+        contextName={waReservation ? getCabinName(waReservation.cabinId) : ''}
       />
     </div>
   );

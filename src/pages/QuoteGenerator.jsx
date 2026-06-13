@@ -4,6 +4,7 @@ import html2pdf from 'html2pdf.js';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useStore } from '../store/useStore';
+import { generateWhatsAppLink, generateQuoteMessage } from '../utils/whatsapp';
 import './QuoteGenerator.css';
 
 export default function QuoteGenerator() {
@@ -13,6 +14,7 @@ export default function QuoteGenerator() {
   const [endDate, setEndDate] = useState(addDays(new Date(), 3));
   const [isHighSeason, setIsHighSeason] = useState(false);
   const [titular, setTitular] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
   
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
@@ -78,6 +80,23 @@ export default function QuoteGenerator() {
     }, 150);
   };
 
+  const handleWhatsAppQuote = () => {
+    if (!clientPhone) {
+      alert("Por favor, ingresa el teléfono del cliente para enviarle la cotización.");
+      return;
+    }
+    
+    // Primero generar el PDF
+    handleExportPDF();
+    
+    // Y luego abrir WhatsApp con las instrucciones
+    setTimeout(() => {
+      alert("El presupuesto en PDF se ha descargado a tu equipo.\n\nA continuación se abrirá WhatsApp. Por favor, adjunta el PDF descargado en el chat para enviarlo.");
+      const link = generateWhatsAppLink(clientPhone, generateQuoteMessage(titular));
+      window.open(link, '_blank', 'noopener,noreferrer');
+    }, 500);
+  };
+
   const handleStartDateChange = (e) => {
     const date = new Date(e.target.value + 'T12:00:00');
     setStartDate(date);
@@ -106,15 +125,27 @@ export default function QuoteGenerator() {
           <div className="card glass-panel" style={{ marginBottom: '1.5rem' }}>
             <h2><Calendar size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'text-bottom' }}/> Datos de la Reserva</h2>
             
-            <div className="form-group" style={{ marginTop: '1rem' }}>
-              <label className="form-label">Titular de la Reserva</label>
-              <input 
-                type="text" 
-                className="form-input"
-                placeholder="Ej: Juan Pérez"
-                value={titular}
-                onChange={(e) => setTitular(e.target.value)}
-              />
+            <div className="form-row" style={{ marginTop: '1rem' }}>
+              <div className="form-group" style={{ flex: 2 }}>
+                <label className="form-label">Titular de la Reserva</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="Ej: Juan Pérez"
+                  value={titular}
+                  onChange={(e) => setTitular(e.target.value)}
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">WhatsApp (Opcional)</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="+569..."
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="form-row" style={{ marginTop: '1rem' }}>
@@ -314,9 +345,19 @@ export default function QuoteGenerator() {
           </div>
           </div>
           
-          <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={handleExportPDF}>
-            <Download size={20} /> Exportar a PDF
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleExportPDF}>
+              <Download size={20} /> Exportar PDF
+            </button>
+            <button 
+              className="btn btn-primary" 
+              style={{ flex: 1, backgroundColor: '#25D366', borderColor: '#25D366', color: 'white' }} 
+              onClick={handleWhatsAppQuote}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              Enviar Cotización
+            </button>
+          </div>
         </div>
       </div>
     </div>

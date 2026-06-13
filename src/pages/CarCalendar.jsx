@@ -14,14 +14,16 @@ import {
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, X, MessageCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import WhatsAppModal from '../components/WhatsAppModal';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
-import { generateWhatsAppLink, generateCarMessage } from '../utils/whatsapp';
 import './Calendar.css';
 
 const CarCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [popover, setPopover] = useState({ visible: false, res: null, x: 0, y: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [waModalOpen, setWaModalOpen] = useState(false);
+  const [waReservation, setWaReservation] = useState(null);
   
   const { cars, carReservations, addCarReservation, updateCarReservation } = useStore();
   
@@ -455,16 +457,20 @@ const CarCalendar = () => {
           <div style={{ fontWeight: 'bold', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>{popover.res.clientName}</span>
             {popover.res.clientPhone && (
-              <a 
-                href={generateWhatsAppLink(popover.res.clientPhone, generateCarMessage(popover.res, cars.find(c => c.id === popover.res.carId)?.name))} 
-                target="_blank" 
-                rel="noreferrer"
-                style={{ color: '#25D366', pointerEvents: 'auto' }} 
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setWaReservation(popover.res);
+                  setWaModalOpen(true);
+                  setPopover({ visible: false, res: null, x: 0, y: 0 });
+                }}
+                className="btn-icon"
+                style={{ color: '#25D366', pointerEvents: 'auto', background: 'rgba(37,211,102,0.1)', padding: '4px', borderRadius: '4px' }} 
                 title="Enviar WhatsApp"
-                onClick={(e) => e.stopPropagation()}
               >
                 <MessageCircle size={18} />
-              </a>
+              </button>
             )}
           </div>
           <div style={{ fontSize: '0.85rem' }}>
@@ -548,6 +554,14 @@ const CarCalendar = () => {
           </div>
         </div>
       )}
+
+      <WhatsAppModal 
+        isOpen={waModalOpen}
+        onClose={() => setWaModalOpen(false)}
+        reservation={waReservation}
+        type="car"
+        contextName={waReservation ? cars.find(c => c.id === waReservation.carId)?.name : ''}
+      />
     </div>
   );
 };

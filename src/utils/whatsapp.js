@@ -23,12 +23,26 @@ export const generateWhatsAppLink = (phone, message) => {
   return `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
 };
 
-export const generateCabinMessage = (res, cabinName) => {
+export const generateCabinMessage = (res, cabinName, template = 'confirmation') => {
   const deposit = res.depositAmount || 0;
   const total = res.totalCost || 0;
   const balance = total - deposit;
+  const client = res.clientName || 'Estimado/a';
   
-  let msg = `¡Hola *${res.clientName}*! 👋\nTe escribimos de Cabañas Manuara para enviarte los detalles de tu reserva en la *${cabinName}*.\n\n`;
+  if (template === 'checkin') {
+    return `¡Hola *${client}*! 👋\nTe escribimos de Cabañas Manuara.\n\nTe recordamos que tu fecha de llegada (Check-in) es el *${res.startDate}* en la *${cabinName}*.\n📍 *Nuestra ubicación:* https://maps.google.com/?q=-27.15,-109.43\n\n¿A qué hora estimas tu llegada para estar atentos?\n¡Nos vemos pronto!`;
+  }
+  
+  if (template === 'checkout') {
+    return `¡Hola *${client}*! 👋\nEsperamos que hayas disfrutado mucho tu estadía en Cabañas Manuara.\n\nTe recordamos que el horario de salida (Check-out) de la *${cabinName}* es mañana a las 11:00 AM.\n¡Gracias por preferirnos! Si tienes un minuto, nos ayudaría mucho una reseña en Google o TripAdvisor. ⭐⭐⭐⭐⭐`;
+  }
+  
+  if (template === 'payment') {
+    return `¡Hola *${client}*! 👋\nTe escribimos de Cabañas Manuara para recordarte que tienes un saldo pendiente por tu reserva en la *${cabinName}*.\n\n💰 *Saldo a pagar:* $${balance.toLocaleString('es-CL')}\n\nPor favor, envíanos el comprobante cuando puedas realizar la transferencia. ¡Muchas gracias!`;
+  }
+  
+  // Default: confirmation
+  let msg = `¡Hola *${client}*! 👋\nTe escribimos de Cabañas Manuara para enviarte los detalles de tu reserva en la *${cabinName}*.\n\n`;
   msg += `📅 *Fecha:* ${res.startDate} al ${res.endDate}\n`;
   msg += `💰 *Total:* $${total.toLocaleString('es-CL')}\n`;
   if (deposit > 0) {
@@ -38,16 +52,25 @@ export const generateCabinMessage = (res, cabinName) => {
     }
   }
   msg += `\n¡Quedamos atentos a tu visita!`;
-  
   return msg;
 };
 
-export const generateCarMessage = (res, carName) => {
+export const generateCarMessage = (res, carName, template = 'confirmation') => {
   const deposit = res.depositAmount || 0;
   const total = res.totalCost || 0;
   const balance = total - deposit;
+  const client = res.clientName || 'Estimado/a';
 
-  let msg = `¡Hola *${res.clientName}*! 👋\nTe escribimos para confirmar tu arriendo del vehículo *${carName}*.\n\n`;
+  if (template === 'checkin') {
+    return `¡Hola *${client}*! 👋\nTe escribimos para coordinar la entrega de tu vehículo arrendado (*${carName}*).\n\nTu fecha de retiro es el *${res.startDate}*.\nPor favor confírmanos la hora exacta a la que pasarás a retirarlo o si necesitas que te lo llevemos al aeropuerto.\n¡Gracias!`;
+  }
+
+  if (template === 'payment') {
+    return `¡Hola *${client}*! 👋\nTe escribimos para recordarte que tienes un saldo pendiente por el arriendo del vehículo *${carName}*.\n\n💰 *Saldo a pagar:* $${balance.toLocaleString('es-CL')}\n\nQuedamos atentos al comprobante de transferencia. ¡Saludos!`;
+  }
+
+  // Default: confirmation
+  let msg = `¡Hola *${client}*! 👋\nTe escribimos para confirmar tu arriendo del vehículo *${carName}*.\n\n`;
   msg += `📅 *Fechas:* Retiro el ${res.startDate} - Devolución el ${res.endDate}\n`;
   msg += `💰 *Total:* $${total.toLocaleString('es-CL')}\n`;
   if (deposit > 0) {
@@ -57,6 +80,9 @@ export const generateCarMessage = (res, carName) => {
     }
   }
   msg += `\n¡Gracias por preferirnos!`;
-
   return msg;
+};
+
+export const generateQuoteMessage = (titular) => {
+  return `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe adjunto en este chat el *Documento PDF* con la cotización formal de tu estadía en Cabañas Manuara, incluyendo el desglose detallado de huéspedes y extras.\n\nRevisa el archivo adjunto y cualquier duda me avisas para poder agendar tu reserva. ¡Quedo atento/a!`;
 };
