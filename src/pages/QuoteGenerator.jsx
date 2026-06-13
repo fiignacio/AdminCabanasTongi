@@ -59,7 +59,7 @@ export default function QuoteGenerator() {
 
   const getPdfOptions = () => ({
     margin: [0.5, 1, 0.5, 1], // Superior, Derecho, Inferior, Izquierdo
-    filename: `Presupuesto_Cabanas_${titular ? titular.replace(/\s+/g, '_') : 'Sin_Nombre'}.pdf`,
+    filename: `PRESUPUESTO_CABAÑAS_MANUARA_${titular ? titular.toUpperCase().replace(/\s+/g, '_') : 'SIN_NOMBRE'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { 
       scale: 2, 
