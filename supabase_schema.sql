@@ -77,3 +77,21 @@ ALTER TABLE public.car_reservations ADD COLUMN IF NOT EXISTS "paymentMethod" tex
 -- Agregar columnas nuevas para Integración WhatsApp (Update)
 ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS "clientPhone" text;
 ALTER TABLE public.car_reservations ADD COLUMN IF NOT EXISTS "clientPhone" text;
+
+-- Storage Policies
+-- Permitir subidas públicas al bucket 'quotes'
+-- CREATE POLICY "Permitir subida de cotizaciones" ON storage.objects FOR INSERT TO public WITH CHECK (bucket_id = 'quotes');
+
+-- CRON JOB para eliminar PDFs antiguos (Requiere extensión pg_cron en Supabase)
+-- Elimina los archivos de cotizaciones mayores a 7 días
+/*
+SELECT cron.schedule(
+  'delete_old_quotes', -- nombre del trabajo
+  '0 0 * * *',         -- todos los días a medianoche
+  $$
+    DELETE FROM storage.objects 
+    WHERE bucket_id = 'quotes' 
+    AND created_at < now() - interval '7 days';
+  $$
+);
+*/

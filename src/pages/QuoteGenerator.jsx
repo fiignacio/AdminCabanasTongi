@@ -392,6 +392,10 @@ export default function QuoteGenerator() {
                 <span>Total Estimado:</span>
                 <span>{formatCurrency(grandTotal)}</span>
               </div>
+              
+              <div style={{ marginTop: '15px', textAlign: 'center', fontSize: '0.8rem', color: '#666', fontStyle: 'italic' }}>
+                ESTE PRESUPUESTO TIENE UNA VALIDEZ DE 7 DÍAS, POSTERIOR A ESTO SE DEBERÁ GENERAR OTRO PRESUPUESTO.
+              </div>
             </div>
           </div>
           </div>
