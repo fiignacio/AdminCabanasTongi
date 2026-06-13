@@ -18,11 +18,11 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     adults: 1,
     childrenCount: 0,
     babiesCount: 0,
-    flightIn: '',
     flightOut: '',
     isBlock: false,
     depositAmount: 0,
-    paymentMethod: ''
+    paymentMethod: '',
+    clientPhone: ''
   });
   
   const [error, setError] = useState('');
@@ -36,7 +36,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         flightIn: reservationToEdit.flightIn || '',
         flightOut: reservationToEdit.flightOut || '',
         depositAmount: reservationToEdit.depositAmount || 0,
-        paymentMethod: reservationToEdit.paymentMethod || ''
+        paymentMethod: reservationToEdit.paymentMethod || '',
+        clientPhone: reservationToEdit.clientPhone || ''
       });
       setTotalCost(reservationToEdit.totalCost);
       setLastCalculatedCost(reservationToEdit.totalCost);
@@ -53,7 +54,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         flightOut: '',
         isBlock: false,
         depositAmount: 0,
-        paymentMethod: ''
+        paymentMethod: '',
+        clientPhone: ''
       });
       setTotalCost(0);
       setLastCalculatedCost(0);
@@ -70,7 +72,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         flightOut: '',
         isBlock: false,
         depositAmount: 0,
-        paymentMethod: ''
+        paymentMethod: '',
+        clientPhone: ''
       });
     }
   }, [reservationToEdit, initialData, cabins, isOpen]);
@@ -241,16 +244,29 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
           </div>
 
           {!formData.isBlock && (
-            <div className="form-group">
-              <label className="form-label">Cliente</label>
-              <input 
-                type="text" 
-                name="clientName" 
-                className="form-input" 
-                value={formData.clientName} 
-                onChange={handleChange} 
-                required={!formData.isBlock} 
-              />
+            <div className="form-row">
+              <div className="form-group" style={{ flex: 2 }}>
+                <label className="form-label">Cliente</label>
+                <input 
+                  type="text" 
+                  name="clientName" 
+                  className="form-input" 
+                  value={formData.clientName} 
+                  onChange={handleChange} 
+                  required={!formData.isBlock} 
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label" title="Opcional">Teléfono / WhatsApp</label>
+                <input 
+                  type="text" 
+                  name="clientPhone" 
+                  className="form-input" 
+                  placeholder="+569..."
+                  value={formData.clientPhone} 
+                  onChange={handleChange} 
+                />
+              </div>
             </div>
           )}
 

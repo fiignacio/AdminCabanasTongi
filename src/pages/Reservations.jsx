@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Upload, Archive, ArchiveRestore, Search, FilterX, FileText } from 'lucide-react';
+import { Plus, Edit2, Trash2, Upload, Archive, ArchiveRestore, Search, FilterX, FileText, MessageCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useStore } from '../store/useStore';
 import ReservationModal from '../components/ReservationModal';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
 import { calculateReservationCost } from '../utils/pricing';
+import { generateWhatsAppLink, generateCabinMessage } from '../utils/whatsapp';
 import './Reservations.css';
 
 const Reservations = () => {
@@ -321,6 +322,18 @@ const Reservations = () => {
                     </td>
                     <td>
                       <div className="actions" style={{ display: 'flex', gap: '0.5rem' }}>
+                        {res.clientPhone && !res.isBlock && (
+                          <a 
+                            href={generateWhatsAppLink(res.clientPhone, generateCabinMessage(res, getCabinName(res.cabinId)))} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="btn-icon" 
+                            style={{ color: '#25D366', background: 'rgba(37,211,102,0.1)' }} 
+                            title="Enviar WhatsApp"
+                          >
+                            <MessageCircle size={18} />
+                          </a>
+                        )}
                         <button className="btn-icon" style={{ color: 'var(--accent-primary)', background: 'rgba(59,130,246,0.1)' }} onClick={() => handleGenerateCarta(res)} title="Carta de Invitación">
                           <FileText size={18} />
                         </button>

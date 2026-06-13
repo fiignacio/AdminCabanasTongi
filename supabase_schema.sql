@@ -73,3 +73,7 @@ ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS "depositAmount" numeric
 ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS "paymentMethod" text;
 ALTER TABLE public.car_reservations ADD COLUMN IF NOT EXISTS "depositAmount" numeric;
 ALTER TABLE public.car_reservations ADD COLUMN IF NOT EXISTS "paymentMethod" text;
+
+-- Agregar columnas nuevas para Integración WhatsApp (Update)
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS "clientPhone" text;
+ALTER TABLE public.car_reservations ADD COLUMN IF NOT EXISTS "clientPhone" text;

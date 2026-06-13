@@ -12,9 +12,10 @@ import {
   isSameDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, MessageCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
+import { generateWhatsAppLink, generateCarMessage } from '../utils/whatsapp';
 import './Calendar.css';
 
 const CarCalendar = () => {
@@ -25,7 +26,7 @@ const CarCalendar = () => {
   const { cars, carReservations, addCarReservation, updateCarReservation } = useStore();
   
   const [resForm, setResForm] = useState({
-    clientName: '', carId: cars[0]?.id || '', startDate: '', endDate: '', status: 'confirmed', totalCost: 0
+    clientName: '', clientPhone: '', carId: cars[0]?.id || '', startDate: '', endDate: '', status: 'confirmed', totalCost: 0
   });
 
   // Swipe-to-Select (Drag to Create) State
@@ -112,7 +113,7 @@ const CarCalendar = () => {
         }
 
         setResForm({
-          clientName: '', carId: dragCreate.carId, 
+          clientName: '', clientPhone: '', carId: dragCreate.carId, 
           startDate: formatSafeDate(start, 'yyyy-MM-dd'), 
           endDate: formatSafeDate(end, 'yyyy-MM-dd'), 
           status: 'confirmed', totalCost: 0
@@ -279,7 +280,7 @@ const CarCalendar = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button className="btn btn-primary btn-sm" onClick={() => {
             setResForm({
-              clientName: '', carId: cars[0]?.id || '', startDate: '', endDate: '', status: 'confirmed', totalCost: 0
+              clientName: '', clientPhone: '', carId: cars[0]?.id || '', startDate: '', endDate: '', status: 'confirmed', totalCost: 0
             });
             setIsModalOpen(true);
           }}>
@@ -410,10 +411,13 @@ const CarCalendar = () => {
                           onDragStart={(e) => handleDragStart(e, res.id)}
                           onMouseEnter={(e) => {
                             if (dragCreate.active) return;
+                            clearTimeout(window.popoverTimeout);
                             const rect = e.currentTarget.getBoundingClientRect();
                             setPopover({ visible: true, res, x: e.clientX, y: rect.top - 10 });
                           }}
-                          onMouseLeave={() => setPopover({ visible: false, res: null, x: 0, y: 0 })}
+                          onMouseLeave={() => {
+                            window.popoverTimeout = setTimeout(() => setPopover({ visible: false, res: null, x: 0, y: 0 }), 150);
+                          }}
                         >
                           {isStart && !isBlock && (
                             <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }}>
@@ -442,12 +446,26 @@ const CarCalendar = () => {
             transform: 'translateX(-50%)',
             zIndex: 999999,
             padding: '1rem',
-            pointerEvents: 'none',
+            pointerEvents: 'auto',
             boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
           }}
+          onMouseEnter={() => { clearTimeout(window.popoverTimeout); setPopover(prev => ({ ...prev, visible: true })) }}
+          onMouseLeave={() => { window.popoverTimeout = setTimeout(() => setPopover({ visible: false, res: null, x: 0, y: 0 }), 150) }}
         >
-          <div style={{ fontWeight: 'bold', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
-            {popover.res.clientName}
+          <div style={{ fontWeight: 'bold', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{popover.res.clientName}</span>
+            {popover.res.clientPhone && (
+              <a 
+                href={generateWhatsAppLink(popover.res.clientPhone, generateCarMessage(popover.res, cars.find(c => c.id === popover.res.carId)?.name))} 
+                target="_blank" 
+                rel="noreferrer"
+                style={{ color: '#25D366', pointerEvents: 'auto' }} 
+                title="Enviar WhatsApp"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MessageCircle size={18} />
+              </a>
+            )}
           </div>
           <div style={{ fontSize: '0.85rem' }}>
             Retiro: {formatSafeDate(popover.res.startDate, 'dd MMM yyyy')}
@@ -471,9 +489,15 @@ const CarCalendar = () => {
               <button className="btn-icon" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
             </div>
             <form onSubmit={handleResSubmit}>
-              <div className="form-group">
-                <label className="form-label">Cliente</label>
-                <input type="text" className="form-input" required value={resForm.clientName} onChange={e => setResForm({...resForm, clientName: e.target.value})} />
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 2 }}>
+                  <label className="form-label">Cliente</label>
+                  <input type="text" className="form-input" required value={resForm.clientName} onChange={e => setResForm({...resForm, clientName: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label" title="Opcional">Teléfono / WhatsApp</label>
+                  <input type="text" className="form-input" placeholder="+569..." value={resForm.clientPhone} onChange={e => setResForm({...resForm, clientPhone: e.target.value})} />
+                </div>
               </div>
               
               <div className="form-group">
