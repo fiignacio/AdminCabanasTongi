@@ -143,6 +143,22 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       return;
     }
 
+    const isAdjacent = reservations.some(res => {
+      if (res.status === 'archived') return false;
+      if (reservationToEdit && res.id === reservationToEdit.id) return false;
+      if (res.cabinId !== formData.cabinId) return false;
+
+      const resStart = parseSafeDate(res.startDate);
+      const resEnd = parseSafeDate(res.endDate);
+      
+      return start.getTime() === resEnd.getTime() || end.getTime() === resStart.getTime();
+    });
+
+    if (isAdjacent) {
+      const confirmSave = window.confirm('⚠️ Atención: Has seleccionado una fecha que coincide con la llegada o salida de otra reserva en la misma cabaña (Turnover). ¿Estás seguro que deseas agendarla en este día?');
+      if (!confirmSave) return;
+    }
+
     const payload = {
       ...formData,
       clientName: formData.isBlock ? 'Bloqueo/Mantenimiento' : formData.clientName,

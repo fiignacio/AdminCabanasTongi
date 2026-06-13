@@ -173,12 +173,24 @@ const CarCalendar = () => {
       if (existingRes.carId !== resForm.carId) return false;
       const exStart = parseSafeDate(existingRes.startDate);
       const exEnd = parseSafeDate(existingRes.endDate);
-      return (start <= exEnd && end >= exStart);
+      return (start < exEnd && end > exStart);
     });
 
     if (isOverlapping) {
       alert("El vehículo ya está reservado en esas fechas.");
       return;
+    }
+
+    const isAdjacent = carReservations.some(existingRes => {
+      if (existingRes.carId !== resForm.carId) return false;
+      const exStart = parseSafeDate(existingRes.startDate);
+      const exEnd = parseSafeDate(existingRes.endDate);
+      return start.getTime() === exEnd.getTime() || end.getTime() === exStart.getTime();
+    });
+
+    if (isAdjacent) {
+      const confirmSave = window.confirm('⚠️ Atención: Has seleccionado una fecha que coincide con la devolución o retiro de otro cliente en el mismo vehículo. ¿Estás seguro de agendarlo en esta fecha?');
+      if (!confirmSave) return;
     }
 
     addCarReservation(resForm);
@@ -221,12 +233,23 @@ const CarCalendar = () => {
       if (existingRes.id === resId || existingRes.carId !== targetCarId) return false;
       const exStart = parseSafeDate(existingRes.startDate);
       const exEnd = parseSafeDate(existingRes.endDate);
-      return (newStart <= exEnd && newEnd >= exStart);
+      return (newStart < exEnd && newEnd > exStart);
     });
 
     if (isOverlapping) {
       alert("No se puede mover aquí. El vehículo ya está reservado.");
       return;
+    }
+
+    const isAdjacent = carReservations.some(existingRes => {
+      if (existingRes.id === resId || existingRes.carId !== targetCarId) return false;
+      const exStart = parseSafeDate(existingRes.startDate);
+      const exEnd = parseSafeDate(existingRes.endDate);
+      return newStart.getTime() === exEnd.getTime() || newEnd.getTime() === exStart.getTime();
+    });
+
+    if (isAdjacent) {
+      if (!window.confirm("⚠️ Atención: La fecha seleccionada coincide con la devolución o retiro de otro cliente. ¿Mover de todos modos?")) return;
     }
 
     updateCarReservation(resId, {

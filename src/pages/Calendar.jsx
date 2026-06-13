@@ -174,12 +174,23 @@ const Calendar = () => {
       if (existingRes.id === resId || existingRes.cabinId !== targetCabinId) return false;
       const exStart = parseSafeDate(existingRes.startDate);
       const exEnd = parseSafeDate(existingRes.endDate);
-      return (newStart <= exEnd && newEnd >= exStart);
+      return (newStart < exEnd && newEnd > exStart);
     });
 
     if (isOverlapping) {
       alert("No se puede mover aquí. Ya existe una reserva en estas fechas.");
       return;
+    }
+
+    const isAdjacent = reservations.some(existingRes => {
+      if (existingRes.id === resId || existingRes.cabinId !== targetCabinId) return false;
+      const exStart = parseSafeDate(existingRes.startDate);
+      const exEnd = parseSafeDate(existingRes.endDate);
+      return newStart.getTime() === exEnd.getTime() || newEnd.getTime() === exStart.getTime();
+    });
+
+    if (isAdjacent) {
+      if (!window.confirm("⚠️ Atención: La fecha seleccionada coincide con la llegada o salida de otra reserva en esta cabaña. ¿Mover de todos modos?")) return;
     }
 
     updateReservation(resId, {
