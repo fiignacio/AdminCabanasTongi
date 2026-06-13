@@ -149,8 +149,8 @@ const CarCalendar = () => {
     setResForm(prev => ({ ...prev, totalCost: rate * days }));
   }, [resForm.carId, resForm.startDate, resForm.endDate, cars]);
 
-  const getReservationForDay = (carId, day) => {
-    return carReservations.find(res => {
+  const getReservationsForDay = (carId, day) => {
+    return carReservations.filter(res => {
       if (res.carId !== carId) return false;
       const start = startOfDay(parseSafeDate(res.startDate));
       const end = startOfDay(parseSafeDate(res.endDate));
@@ -311,7 +311,7 @@ const CarCalendar = () => {
               </div>
               
               {daysInMonth.map(day => {
-                const res = getReservationForDay(car.id, day);
+                const dayReservations = getReservationsForDay(car.id, day);
                 const currentDay = startOfDay(day);
                 
                 let isBeingDragged = false;
@@ -324,7 +324,7 @@ const CarCalendar = () => {
                 
                 const isTodayCol = isSameDay(day, new Date());
 
-                if (!res) {
+                if (dayReservations.length === 0) {
                   return (
                     <div 
                       key={day.toISOString()} 
@@ -338,12 +338,6 @@ const CarCalendar = () => {
                   );
                 }
 
-                const isBlock = res.status === 'blocked';
-                const resStart = startOfDay(parseSafeDate(res.startDate));
-                const resEnd = startOfDay(parseSafeDate(res.endDate));
-                const isStart = isSameDay(resStart, currentDay);
-                const isEnd = isSameDay(resEnd, currentDay);
-
                 return (
                   <div 
                     key={day.toISOString()} 
@@ -351,21 +345,62 @@ const CarCalendar = () => {
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, car.id, day)}
                   >
-                    <div 
-                      className={`reservation-bar ${isStart ? 'start-day' : ''} ${isEnd ? 'end-day' : ''} ${isBlock ? 'blocked' : ''}`}
-                      style={{ backgroundColor: car.color || 'var(--accent-primary)', cursor: 'pointer' }}
-                      draggable={true}
-                      onMouseDown={(e) => e.stopPropagation()} // Evitar paneo al interactuar con reservas
-                      onDragStart={(e) => handleDragStart(e, res.id)}
-                      onMouseEnter={(e) => {
-                        if (dragCreate.active) return;
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setPopover({ visible: true, res, x: e.clientX, y: rect.top - 10 });
-                      }}
-                      onMouseLeave={() => setPopover({ visible: false, res: null, x: 0, y: 0 })}
-                    >
-                      {isStart && <span className="reservation-client">{res.clientName}</span>}
-                    </div>
+                    {dayReservations.map((res, index) => {
+                      const isBlock = res.status === 'blocked';
+                      const resStart = startOfDay(parseSafeDate(res.startDate));
+                      const resEnd = startOfDay(parseSafeDate(res.endDate));
+                      const isStart = isSameDay(resStart, currentDay);
+                      const isEnd = isSameDay(resEnd, currentDay);
+                      const nights = Math.max(1, Math.ceil(Math.abs(resEnd - resStart) / (1000 * 60 * 60 * 24)));
+
+                      let barClasses = `reservation-bar ${isBlock ? 'blocked' : ''}`;
+                      let customStyle = isBlock 
+                        ? { background: 'linear-gradient(135deg, #706258, #3E312A)', cursor: 'pointer' } 
+                        : { backgroundColor: car.color || 'var(--accent-primary)', cursor: 'pointer' };
+
+                      if (dayReservations.length > 1) {
+                         if (isEnd) {
+                             barClasses += ' end-day';
+                             customStyle.zIndex = 2;
+                             customStyle.right = '50%';
+                             customStyle.borderTopRightRadius = '999px';
+                             customStyle.borderBottomRightRadius = '999px';
+                         } else if (isStart) {
+                             barClasses += ' start-day';
+                             customStyle.zIndex = 3;
+                             customStyle.left = '50%';
+                             customStyle.borderTopLeftRadius = '999px';
+                             customStyle.borderBottomLeftRadius = '999px';
+                         }
+                      } else {
+                         if (isStart) barClasses += ' start-day';
+                         if (isEnd) barClasses += ' end-day';
+                      }
+
+                      return (
+                        <div 
+                          key={res.id}
+                          className={barClasses}
+                          style={customStyle}
+                          draggable={true}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onDragStart={(e) => handleDragStart(e, res.id)}
+                          onMouseEnter={(e) => {
+                            if (dragCreate.active) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setPopover({ visible: true, res, x: e.clientX, y: rect.top - 10 });
+                          }}
+                          onMouseLeave={() => setPopover({ visible: false, res: null, x: 0, y: 0 })}
+                        >
+                          {isStart && !isBlock && (
+                            <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }}>
+                              {res.clientName}
+                            </span>
+                          )}
+                          {isStart && isBlock && <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: '#fff' }}>Bloqueado</span>}
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
