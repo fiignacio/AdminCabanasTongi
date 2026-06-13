@@ -3,6 +3,8 @@ import { Download, Users, FileText, Plane, PlaneTakeoff, PlaneLanding, Mail, Tra
 import html2pdf from 'html2pdf.js';
 import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useStore, getSupabase } from '../store/useStore';
+import { generateWhatsAppLink, generateInvitationMessage } from '../utils/whatsapp';
 import './PassengerRegistration.css';
 
 export default function PassengerRegistration() {
@@ -18,6 +20,7 @@ export default function PassengerRegistration() {
   const [flightOut, setFlightOut] = useState(reservationData?.flightOut || '');
   const [email, setEmail] = useState('');
   const [titular, setTitular] = useState(reservationData?.clientName || '');
+  const [clientPhone, setClientPhone] = useState(reservationData?.clientPhone || '');
   const [passengers, setPassengers] = useState([]);
   
   const invoiceRef = useRef(null);
@@ -155,62 +158,81 @@ export default function PassengerRegistration() {
   };
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const getPdfOptions = () => ({
+    margin: [0.5, 1, 0.5, 1],
+    filename: `CARTA_DE_INVITACION_${titular ? titular.toUpperCase().replace(/\s+/g, '_') : 'SIN_NOMBRE'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FAF7F2' },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  });
 
   const handleExportPDF = () => {
     setIsExporting(true);
-    
     setTimeout(() => {
       const element = invoiceRef.current;
-      
-      const opt = {
-        margin: [0.5, 1, 0.5, 1],
-        filename: `Registro_Pasajeros_${titular ? titular.replace(/\s+/g, '_') : 'Sin_Nombre'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          backgroundColor: '#FAF7F2'
-        },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      
-      html2pdf().set(opt).from(element).save().then(() => {
+      html2pdf().set(getPdfOptions()).from(element).save().then(() => {
         setIsExporting(false);
       });
     }, 150);
   };
 
-  const handleShare = () => {
+  const handleWhatsAppInvitation = () => {
+    if (!clientPhone) {
+      alert("Por favor, ingresa el teléfono del cliente para enviarle la carta de invitación.");
+      return;
+    }
+    
+    setIsUploading(true);
     setIsExporting(true);
     
-    setTimeout(() => {
-      const element = invoiceRef.current;
-      const opt = {
-        margin: [0.5, 1, 0.5, 1],
-        filename: `Registro_Pasajeros_${titular ? titular.replace(/\s+/g, '_') : 'Sin_Nombre'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FAF7F2' },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      
-      html2pdf().set(opt).from(element).outputPdf('blob').then((pdfBlob) => {
-        setIsExporting(false);
-        const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+    setTimeout(async () => {
+      try {
+        const element = invoiceRef.current;
+        const options = getPdfOptions();
         
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          navigator.share({
-            files: [file],
-            title: 'Carta de Invitación - Cabañas Manuara',
-            text: `Adjunto carta de invitación / registro de pasajeros para la reserva de ${titular || ''}.`
-          }).catch(err => {
-            console.error("Error al compartir:", err);
-            // Si el usuario cancela no hacemos nada, pero si falla mostramos algo
-          });
-        } else {
-          alert("Tu dispositivo o navegador no soporta enviar archivos directamente. El archivo se descargará.");
-          handleExportPDF();
-        }
-      });
+        // Generar Blob
+        const pdfWorker = html2pdf().set(options).from(element);
+        const pdfBlob = await pdfWorker.output('blob');
+        
+        // 1. Descargar localmente
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = options.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+
+        // 2. Subir a Supabase Storage
+        const sb = getSupabase(useStore.getState().syncConfig);
+        if (!sb) throw new Error("No hay conexión a Supabase.");
+
+        const fileName = `${Date.now()}_${options.filename}`;
+        const { error: uploadError } = await sb.storage
+          .from('quotes') // Usamos el mismo bucket público
+          .upload(fileName, pdfBlob, { contentType: 'application/pdf', cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        // 3. Obtener URL Pública
+        const { data: publicUrlData } = sb.storage.from('quotes').getPublicUrl(fileName);
+        const pdfPublicUrl = publicUrlData.publicUrl;
+
+        // 4. Abrir WhatsApp
+        const waMessage = generateInvitationMessage(titular, pdfPublicUrl);
+        const waLink = generateWhatsAppLink(clientPhone, waMessage);
+        window.open(waLink, '_blank', 'noopener,noreferrer');
+
+      } catch (err) {
+        console.error("Error al procesar la invitación:", err);
+        alert(`Ocurrió un error al subir el archivo: ${err.message}`);
+      } finally {
+        setIsUploading(false);
+        setIsExporting(false);
+      }
     }, 150);
   };
 
@@ -250,9 +272,13 @@ export default function PassengerRegistration() {
             <h2><Plane size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'text-bottom' }}/> Detalles del Viaje</h2>
             
             <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr 1fr' }}>
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="form-group">
                 <label className="form-label">Titular de la Reserva</label>
                 <input type="text" className="form-input" value={titular} onChange={e => setTitular(e.target.value)} placeholder="Ej: Juan Pérez" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Teléfono Cliente (WhatsApp)</label>
+                <input type="text" className="form-input" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="+56912345678" />
               </div>
               <div className="form-group">
                 <label className="form-label">Fecha Ida (Check-in)</label>
@@ -393,19 +419,17 @@ export default function PassengerRegistration() {
           </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', width: '100%' }}>
-            <button 
-              className="btn btn-primary" 
-              style={{ flex: 1 }}
-              onClick={handleExportPDF}
-            >
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleExportPDF} disabled={isExporting}>
               <Download size={20} /> Guardar
             </button>
             <button 
-              className="btn btn-secondary" 
-              style={{ flex: 1, backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none' }}
-              onClick={handleShare}
+              className="btn btn-primary" 
+              style={{ flex: 1, backgroundColor: '#25D366', borderColor: '#25D366', color: 'white', opacity: isUploading ? 0.7 : 1 }}
+              onClick={handleWhatsAppInvitation}
+              disabled={isUploading}
             >
-              <Share2 size={20} /> Compartir / Enviar
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              {isUploading ? 'Procesando...' : 'Enviar por WhatsApp'}
             </button>
           </div>
         </div>

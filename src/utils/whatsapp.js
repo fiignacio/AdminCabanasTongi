@@ -91,3 +91,12 @@ export const generateQuoteMessage = (titular, pdfUrl = '') => {
   msg += `Revisa el documento y cualquier duda me avisas para poder agendar tu reserva. ¡Quedo atento/a!`;
   return msg;
 };
+
+export const generateInvitationMessage = (titular, pdfUrl = '') => {
+  let msg = `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe envío la Carta de Invitación y el Registro de Pasajeros para tu estadía en Cabañas Manuara.\n\n`;
+  if (pdfUrl) {
+    msg += `📄 *Ver y descargar Carta de Invitación:* ${pdfUrl}\n\n`;
+  }
+  msg += `Este documento es útil para agilizar tu llegada y certificar tu reserva. ¡Te esperamos!`;
+  return msg;
+};
