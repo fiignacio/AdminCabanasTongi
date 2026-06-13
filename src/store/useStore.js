@@ -24,6 +24,76 @@ export const useStore = create(
         prices: { ...state.prices, ...newPrices }
       })),
       
+      // OFFLINE QUEUE
+      offlineQueue: [],
+      addToOfflineQueue: (actionType, table, payload, originalId) => {
+        set(state => ({
+          offlineQueue: [...state.offlineQueue, {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+            timestamp: Date.now(),
+            actionType,
+            table,
+            payload,
+            originalId
+          }]
+        }));
+      },
+      removeFromOfflineQueue: (id) => {
+        set(state => ({ offlineQueue: state.offlineQueue.filter(item => item.id !== id) }));
+      },
+      handleMutationResponse: (error, actionType, table, payload, originalId) => {
+        if (error) {
+          if (error.message && error.message.includes('Failed to fetch')) {
+            get().addToOfflineQueue(actionType, table, payload, originalId);
+          } else {
+            console.error(error);
+            alert(`Error base de datos (${table}): ${error.message}`);
+          }
+        }
+      },
+      processOfflineQueue: async () => {
+        const queue = get().offlineQueue;
+        if (queue.length === 0) return;
+        
+        const sb = getSupabase(get().syncConfig);
+        if (!sb) return;
+
+        console.log(`Procesando ${queue.length} operaciones offline...`);
+        
+        let newQueue = [...queue];
+        
+        for (let i = 0; i < queue.length; i++) {
+          const item = queue[i];
+          let error = null;
+          
+          try {
+            if (item.actionType === 'INSERT') {
+              const { error: err } = await sb.from(item.table).insert([item.payload]);
+              error = err;
+            } else if (item.actionType === 'UPDATE') {
+              const { error: err } = await sb.from(item.table).update(item.payload).eq('id', item.originalId);
+              error = err;
+            } else if (item.actionType === 'DELETE') {
+              const { error: err } = await sb.from(item.table).delete().eq('id', item.originalId);
+              error = err;
+            }
+            
+            // 23505 is Unique Violation (already inserted)
+            if (!error || error.code === '23505') {
+              newQueue = newQueue.filter(q => q.id !== item.id);
+            } else {
+              console.error("Fallo al sincronizar item", item, error);
+              break; // Stop if there's a real error (like no internet again)
+            }
+          } catch (err) {
+            console.error("Fallo general sincronizando item", err);
+            break;
+          }
+        }
+        
+        set({ offlineQueue: newQueue });
+      },
+
       cabins: [
         { id: '1', name: 'Cabaña Grande', type: 'large', maxCapacity: 6, ownerId: 'owner1', ownerName: 'Dueño 1', color: '#D35400' },
         { id: '2', name: 'Cabaña Pequeña', type: 'small', maxCapacity: 3, ownerId: 'owner1', ownerName: 'Dueño 1', color: '#556B2F' },
@@ -35,26 +105,25 @@ export const useStore = create(
         set((state) => ({ cabins: [...state.cabins, newCabin] }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cabins').insert([newCabin]).then(({error}) => {
-            if (error) {
-                console.error(error);
-                alert("Error base de datos (Cabañas): " + error.message);
-            }
-        });
+        if (sb) sb.from('cabins').insert([newCabin])
+          .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'cabins', newCabin))
+          .catch(e => get().handleMutationResponse(e, 'INSERT', 'cabins', newCabin));
       },
       updateCabin: (id, updatedData) => {
         set((state) => ({ cabins: state.cabins.map(c => c.id === id ? { ...c, ...updatedData } : c) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cabins').update(updatedData).eq('id', id).then(({error}) => {
-            if (error) alert("Error base de datos (Actualizar Cabaña): " + error.message);
-        });
+        if (sb) sb.from('cabins').update(updatedData).eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'UPDATE', 'cabins', updatedData, id))
+          .catch(e => get().handleMutationResponse(e, 'UPDATE', 'cabins', updatedData, id));
       },
       deleteCabin: (id) => {
         set((state) => ({ cabins: state.cabins.filter(c => c.id !== id) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cabins').delete().eq('id', id).then(({error}) => error && console.error(error));
+        if (sb) sb.from('cabins').delete().eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'cabins', null, id))
+          .catch(e => get().handleMutationResponse(e, 'DELETE', 'cabins', null, id));
       },
       
       reservations: [],
@@ -63,29 +132,25 @@ export const useStore = create(
         set((state) => ({ reservations: [...state.reservations, newRes] }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('reservations').insert([newRes]).then(({error}) => {
-            if (error) {
-                console.error(error);
-                alert("Error base de datos (Crear Reserva): " + error.message + "\n\n(Probablemente falten las columnas de abonos en tu Supabase. Revisa el Walkthrough).");
-            }
-        });
+        if (sb) sb.from('reservations').insert([newRes])
+          .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'reservations', newRes))
+          .catch(e => get().handleMutationResponse(e, 'INSERT', 'reservations', newRes));
       },
       updateReservation: (id, updatedData) => {
         set((state) => ({ reservations: state.reservations.map(res => res.id === id ? { ...res, ...updatedData } : res) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('reservations').update(updatedData).eq('id', id).then(({error}) => {
-            if (error) {
-                console.error(error);
-                alert("Error base de datos (Actualizar Reserva): " + error.message);
-            }
-        });
+        if (sb) sb.from('reservations').update(updatedData).eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'UPDATE', 'reservations', updatedData, id))
+          .catch(e => get().handleMutationResponse(e, 'UPDATE', 'reservations', updatedData, id));
       },
       deleteReservation: (id) => {
         set((state) => ({ reservations: state.reservations.filter(res => res.id !== id) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('reservations').delete().eq('id', id).then(({error}) => error && console.error(error));
+        if (sb) sb.from('reservations').delete().eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'reservations', null, id))
+          .catch(e => get().handleMutationResponse(e, 'DELETE', 'reservations', null, id));
       },
       // CARS
       cars: [
@@ -97,29 +162,25 @@ export const useStore = create(
         set((state) => ({ cars: [...state.cars, newCar] }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cars').insert([newCar]).then(({error}) => {
-          if (error) {
-            console.error(error);
-            alert("Error al guardar vehículo en la nube: " + error.message + "\nPor favor, actualiza tu base de datos con el último supabase_schema.sql");
-          }
-        });
+        if (sb) sb.from('cars').insert([newCar])
+          .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'cars', newCar))
+          .catch(e => get().handleMutationResponse(e, 'INSERT', 'cars', newCar));
       },
       updateCar: (id, updatedData) => {
         set((state) => ({ cars: state.cars.map(c => c.id === id ? { ...c, ...updatedData } : c) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cars').update(updatedData).eq('id', id).then(({error}) => {
-          if (error) {
-            console.error(error);
-            alert("Error al actualizar vehículo en la nube: " + error.message);
-          }
-        });
+        if (sb) sb.from('cars').update(updatedData).eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'UPDATE', 'cars', updatedData, id))
+          .catch(e => get().handleMutationResponse(e, 'UPDATE', 'cars', updatedData, id));
       },
       deleteCar: (id) => {
         set((state) => ({ cars: state.cars.filter(c => c.id !== id) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('cars').delete().eq('id', id).then(({error}) => error && console.error(error));
+        if (sb) sb.from('cars').delete().eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'cars', null, id))
+          .catch(e => get().handleMutationResponse(e, 'DELETE', 'cars', null, id));
       },
 
       // CAR RESERVATIONS
@@ -129,19 +190,25 @@ export const useStore = create(
         set((state) => ({ carReservations: [...state.carReservations, newRes] }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('car_reservations').insert([newRes]).then(({error}) => error && console.error(error));
+        if (sb) sb.from('car_reservations').insert([newRes])
+          .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'car_reservations', newRes))
+          .catch(e => get().handleMutationResponse(e, 'INSERT', 'car_reservations', newRes));
       },
       updateCarReservation: (id, updatedData) => {
         set((state) => ({ carReservations: state.carReservations.map(r => r.id === id ? { ...r, ...updatedData } : r) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('car_reservations').update(updatedData).eq('id', id).then(({error}) => error && console.error(error));
+        if (sb) sb.from('car_reservations').update(updatedData).eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'UPDATE', 'car_reservations', updatedData, id))
+          .catch(e => get().handleMutationResponse(e, 'UPDATE', 'car_reservations', updatedData, id));
       },
       deleteCarReservation: (id) => {
         set((state) => ({ carReservations: state.carReservations.filter(r => r.id !== id) }));
         
         const sb = getSupabase(get().syncConfig);
-        if (sb) sb.from('car_reservations').delete().eq('id', id).then(({error}) => error && console.error(error));
+        if (sb) sb.from('car_reservations').delete().eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'car_reservations', null, id))
+          .catch(e => get().handleMutationResponse(e, 'DELETE', 'car_reservations', null, id));
       },
       // Sync Configurations
       syncConfig: {

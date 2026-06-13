@@ -1,10 +1,23 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut, WifiOff, CloudOff } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import './Sidebar.css';
 
 const Sidebar = ({ onClose }) => {
-  const { logout } = useStore();
+  const { logout, offlineQueue } = useStore();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -31,6 +44,17 @@ const Sidebar = ({ onClose }) => {
         <h2 style={{ fontSize: '1.25rem' }}>Cabañas Manuara</h2>
       </div>
       
+      {!isOnline && (
+        <div style={{ margin: '0.5rem 1rem', padding: '0.5rem', background: 'rgba(231, 76, 60, 0.1)', color: 'var(--danger)', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+          <WifiOff size={16} /> Modo Sin Conexión
+        </div>
+      )}
+      {offlineQueue.length > 0 && (
+        <div style={{ margin: '0.5rem 1rem', padding: '0.5rem', background: 'rgba(243, 156, 18, 0.1)', color: '#d35400', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+          <CloudOff size={16} /> {offlineQueue.length} cambio(s) por subir
+        </div>
+      )}
+
       <nav className="sidebar-nav">
         {menuItems.map((item) => (
           <NavLink 

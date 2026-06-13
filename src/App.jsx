@@ -17,16 +17,25 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const { fetchFromSupabase, initRealtimeSubscription, checkSession } = useStore();
+  const { fetchFromSupabase, initRealtimeSubscription, checkSession, processOfflineQueue } = useStore();
 
   useEffect(() => {
     checkSession();
     fetchFromSupabase();
     const unsubscribe = initRealtimeSubscription();
+    
+    // Offline / Online listeners
+    const handleOnline = () => {
+      console.log('Aplicación de nuevo en línea, procesando cola...');
+      processOfflineQueue();
+    };
+    window.addEventListener('online', handleOnline);
+
     return () => {
       if (unsubscribe) unsubscribe();
+      window.removeEventListener('online', handleOnline);
     };
-  }, [fetchFromSupabase, initRealtimeSubscription, checkSession]);
+  }, [fetchFromSupabase, initRealtimeSubscription, checkSession, processOfflineQueue]);
 
   return (
     <Router>
