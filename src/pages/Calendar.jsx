@@ -326,13 +326,13 @@ const Calendar = () => {
                          if (isEnd) {
                              barClasses += ' end-day';
                              customStyle.zIndex = 2;
-                             customStyle.right = '50%';
+                             customStyle.right = 'calc(50% + 1px)';
                              customStyle.borderTopRightRadius = '999px';
                              customStyle.borderBottomRightRadius = '999px';
                          } else if (isStart) {
                              barClasses += ' start-day';
                              customStyle.zIndex = 3;
-                             customStyle.left = '50%';
+                             customStyle.left = 'calc(50% + 1px)';
                              customStyle.borderTopLeftRadius = '999px';
                              customStyle.borderBottomLeftRadius = '999px';
                          }
