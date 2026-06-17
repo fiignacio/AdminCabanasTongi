@@ -28,9 +28,9 @@ const Calendar = () => {
   const [editingRes, setEditingRes] = useState(null);
   const [initialDataForModal, setInitialDataForModal] = useState(null);
 
-  // Swipe-to-Select (Drag to Create) State
   const [dragCreate, setDragCreate] = useState({ active: false, cabinId: null, startDay: null, endDay: null });
   const [isTextCollapsed, setIsTextCollapsed] = useState(window.innerWidth < 768);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -219,7 +219,10 @@ const Calendar = () => {
         <h1>Calendario de Disponibilidad</h1>
         
         <div className="calendar-header-actions">
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button className="btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+              {isSidebarCollapsed ? 'Mostrar Cabañas' : 'Ocultar Cabañas'}
+            </button>
             <button className="btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => setIsTextCollapsed(!isTextCollapsed)}>
               {isTextCollapsed ? 'Mostrar Textos' : 'Ocultar Textos'}
             </button>
@@ -253,12 +256,14 @@ const Calendar = () => {
         onMouseMove={handleWrapperMouseMove}
         onMouseUp={handleWrapperMouseUpOrLeave}
         onMouseLeave={handleWrapperMouseUpOrLeave}
-        style={{ cursor: isPanning ? 'grabbing' : 'auto' }}
+        style={{ cursor: isPanning ? 'grabbing' : 'auto', isolation: 'isolate' }}
       >
         <div className="calendar-grid">
           {/* Header Row */}
           <div className="calendar-row header-row">
-            <div className="calendar-cell cabin-name-header">Cabaña</div>
+            <div className={`calendar-cell cabin-name-header ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+              {isSidebarCollapsed ? 'Cab.' : 'Cabaña'}
+            </div>
             {daysInMonth.map(day => {
               const isToday = isSameDay(day, new Date());
               return (
@@ -272,11 +277,13 @@ const Calendar = () => {
           {/* Cabin Rows */}
           {cabins.map(cabin => (
             <div key={cabin.id} className="calendar-row">
-              <div className="calendar-cell cabin-name-cell">
+              <div className={`calendar-cell cabin-name-cell ${isSidebarCollapsed ? 'collapsed' : ''}`}>
                 <div className="cabin-color-dot" style={{ backgroundColor: cabin.color || 'var(--accent-primary)' }}></div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <strong>{cabin.name}</strong>
-                </div>
+                {!isSidebarCollapsed && (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong>{cabin.name}</strong>
+                  </div>
+                )}
               </div>
               
               {daysInMonth.map(day => {

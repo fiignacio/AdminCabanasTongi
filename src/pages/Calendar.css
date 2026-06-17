@@ -99,16 +99,24 @@
   justify-content: flex-start;
   flex-direction: row;
   padding: 0.75rem 1rem;
-  background: #FFFFFF;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
   position: -webkit-sticky;
   position: sticky;
   left: 0;
   z-index: 100 !important;
-  transform: translateZ(1px); /* Force hardware layer to fix mobile z-index bug */
-  -webkit-transform: translateZ(1px);
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 2px 0 5px rgba(0,0,0,0.03); /* Subtle shadow for depth */
   gap: 10px;
+  isolation: isolate;
+  transition: min-width 0.3s ease, max-width 0.3s ease, padding 0.3s ease;
+}
+
+.cabin-name-cell.collapsed, .cabin-name-header.collapsed {
+  min-width: 45px !important;
+  max-width: 45px !important;
+  padding: 0.5rem !important;
+  justify-content: center;
 }
 
 .cabin-name-header {
@@ -315,7 +323,7 @@
     font-size: 0.9rem;
   }
 
-  .cabin-name-cell, .cabin-name-header {
+  .cabin-name-cell:not(.collapsed), .cabin-name-header:not(.collapsed) {
     min-width: 130px;
     max-width: 130px;
     padding: 0.5rem;
