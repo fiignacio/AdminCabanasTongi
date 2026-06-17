@@ -171,39 +171,46 @@ const Reports = () => {
         {filteredReservations.length === 0 ? (
           <p className="empty-text">No hay datos para mostrar con este filtro.</p>
         ) : (
-          <table className="reservations-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead style={{ background: '#f8f9fa' }}>
-              <tr>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #ddd', color: '#333' }}>Cliente</th>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #ddd', color: '#333' }}>Cabaña</th>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #ddd', color: '#333' }}>Llegada</th>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #ddd', color: '#333' }}>Salida</th>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #ddd', color: '#333' }}>Vuelo Entrada</th>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #ddd', color: '#333' }}>Vuelo Salida</th>
-                <th style={{ padding: '10px', textAlign: 'center', borderBottom: '2px solid #ddd', color: '#333' }}>Adultos</th>
-                <th style={{ padding: '10px', textAlign: 'center', borderBottom: '2px solid #ddd', color: '#333' }}>Niños</th>
-                <th style={{ padding: '10px', textAlign: 'center', borderBottom: '2px solid #ddd', color: '#333' }}>Bebés</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredReservations.map(res => {
-                const cabin = cabins.find(c => c.id === res.cabinId);
-                return (
-                  <tr key={res.id}>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444' }}>{res.clientName}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444' }}>{cabin?.name}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{formatSafeDate(res.startDate, 'dd-MM-yyyy').replace(/-/g, '\u2011')}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{formatSafeDate(res.endDate, 'dd-MM-yyyy').replace(/-/g, '\u2011')}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{res.flightIn || '\u2011'}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', whiteSpace: 'nowrap' }}>{res.flightOut || '\u2011'}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', textAlign: 'center' }}>{res.adults || 0}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', textAlign: 'center' }}>{res.childrenCount || 0}</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #eee', color: '#444', textAlign: 'center' }}>{res.babiesCount || 0}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="table-responsive" style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #eee' }}>
+            <table className="reports-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+              <thead style={{ background: '#f8f9fa', borderBottom: '2px solid #e2e8f0' }}>
+                <tr>
+                  <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cliente</th>
+                  <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unidad</th>
+                  <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estadía</th>
+                  <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vuelos (In / Out)</th>
+                  <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Pax (A/N/B)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredReservations.map(res => {
+                  const cabin = cabins.find(c => c.id === res.cabinId);
+                  return (
+                    <tr key={res.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s ease' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                      <td style={{ padding: '12px 16px', color: '#334155', fontWeight: '500' }}>{res.clientName}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ background: cabin?.color ? `${cabin.color}20` : '#e2e8f0', color: cabin?.color || '#475569', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '500' }}>
+                          {cabin?.name || 'Vehículo'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '0.9rem' }}>
+                        <strong style={{ color: '#334155' }}>{formatSafeDate(res.startDate, 'dd/MM')}</strong> al <strong style={{ color: '#334155' }}>{formatSafeDate(res.endDate, 'dd/MM')}</strong>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '0.85rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span>In: <strong style={{ color: '#334155' }}>{res.flightIn || '--'}</strong></span>
+                          <span>Out: <strong style={{ color: '#334155' }}>{res.flightOut || '--'}</strong></span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem', letterSpacing: '1px' }}>
+                        <span title="Adultos">{res.adults || 0}</span> / <span title="Niños">{res.childrenCount || 0}</span> / <span title="Bebés">{res.babiesCount || 0}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
