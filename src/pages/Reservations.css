@@ -58,3 +58,21 @@
 .actions .btn-icon.danger:hover {
   color: var(--danger);
 }
+
+@media (max-width: 768px) {
+  .reservations-table th,
+  .reservations-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .reservations-table th {
+    font-size: 0.7rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

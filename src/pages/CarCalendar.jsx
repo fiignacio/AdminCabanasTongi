@@ -25,6 +25,9 @@ const CarCalendar = () => {
   const [waModalOpen, setWaModalOpen] = useState(false);
   const [waReservation, setWaReservation] = useState(null);
   
+  const [isTextCollapsed, setIsTextCollapsed] = useState(window.innerWidth < 768);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
+
   const { cars, carReservations, addCarReservation, updateCarReservation } = useStore();
   
   const [resForm, setResForm] = useState({
@@ -279,7 +282,15 @@ const CarCalendar = () => {
       <div className="calendar-header">
         <h1>Calendario de Vehículos</h1>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="calendar-header-actions">
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button className="btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+              {isSidebarCollapsed ? 'Mostrar Autos' : 'Ocultar Autos'}
+            </button>
+            <button className="btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => setIsTextCollapsed(!isTextCollapsed)}>
+              {isTextCollapsed ? 'Mostrar Textos' : 'Ocultar Textos'}
+            </button>
+          </div>
           <button className="btn btn-primary btn-sm" onClick={() => {
             setResForm({
               clientName: '', clientPhone: '', carId: cars[0]?.id || '', startDate: '', endDate: '', status: 'confirmed', totalCost: 0
@@ -314,7 +325,9 @@ const CarCalendar = () => {
         <div className="calendar-grid">
           {/* Header Row */}
           <div className="calendar-row header-row">
-            <div className="calendar-cell cabin-name-header">Vehículo</div>
+            <div className={`calendar-cell cabin-name-header ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+              {isSidebarCollapsed ? 'Veh.' : 'Vehículo'}
+            </div>
             {daysInMonth.map(day => {
               const isToday = isSameDay(day, new Date());
               return (
@@ -328,12 +341,14 @@ const CarCalendar = () => {
           {/* Car Rows */}
           {cars.map(car => (
             <div key={car.id} className="calendar-row">
-              <div className="calendar-cell cabin-name-cell">
-                <div className="cabin-color-dot" style={{ backgroundColor: car.color || 'var(--accent-primary)' }}></div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <strong>{car.name}</strong>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{car.plate}</span>
-                </div>
+              <div className={`calendar-cell cabin-name-cell ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+                <div className="cabin-color-dot" style={{ backgroundColor: car.color || 'var(--accent-secondary)' }}></div>
+                {!isSidebarCollapsed && (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong>{car.brand} {car.model}</strong>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{car.plate}</span>
+                  </div>
+                )}
               </div>
               
               {daysInMonth.map(day => {
@@ -377,7 +392,6 @@ const CarCalendar = () => {
                       const resEnd = startOfDay(parseSafeDate(res.endDate));
                       const isStart = isSameDay(resStart, currentDay);
                       const isEnd = isSameDay(resEnd, currentDay);
-                      const nights = Math.max(1, Math.ceil(Math.abs(resEnd - resStart) / (1000 * 60 * 60 * 24)));
 
                       let barClasses = `reservation-bar ${isBlock ? 'blocked' : ''}`;
                       let customStyle = isBlock 
@@ -422,11 +436,19 @@ const CarCalendar = () => {
                           }}
                         >
                           {isStart && !isBlock && (
-                            <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }}>
+                            <span className="reservation-client" style={{ 
+                              flexShrink: 0, 
+                              maxWidth: isTextCollapsed ? '16px' : `calc(${nights} * 42px - 16px)`, 
+                              display: 'inline-block', 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis', 
+                              verticalAlign: 'middle',
+                              transition: 'max-width 0.3s ease'
+                            }}>
                               {res.clientName}
                             </span>
                           )}
-                          {isStart && isBlock && <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: '#fff' }}>Bloqueado</span>}
+                          {isStart && isBlock && <span className="reservation-client" style={{ flexShrink: 0, maxWidth: isTextCollapsed ? '16px' : `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: '#fff', transition: 'max-width 0.3s ease' }}>Bloqueado</span>}
                         </div>
                       );
                     })}

@@ -83,3 +83,22 @@
   color: white;
   border-color: var(--primary-color);
 }
+
+@media (max-width: 768px) {
+  .invoice-header {
+    padding: 1.5rem;
+  }
+  
+  .invoice-body {
+    padding: 1.5rem;
+  }
+  
+  .invoice-title {
+    font-size: 1.4rem;
+  }
+  
+  .invoice-doc-type {
+    font-size: 1rem;
+    padding: 0.4rem;
+  }
+}

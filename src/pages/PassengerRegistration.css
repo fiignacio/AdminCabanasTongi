@@ -91,3 +91,27 @@
   color: #666;
   font-weight: 600;
 }
+
+@media (max-width: 768px) {
+  .invoice-header {
+    padding: 1.5rem;
+  }
+  
+  .invoice-body {
+    padding: 1.5rem;
+  }
+  
+  .invoice-title {
+    font-size: 1.4rem;
+  }
+  
+  .invoice-doc-type {
+    font-size: 1rem;
+    padding: 0.4rem;
+  }
+  
+  .invoice-table th, .invoice-table td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}

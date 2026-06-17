@@ -41,3 +41,14 @@
 .text-success {
   color: var(--success);
 }
+
+@media (max-width: 768px) {
+  .filter-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .filter-controls .form-group {
+    max-width: 100%;
+  }
+}

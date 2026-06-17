@@ -196,4 +196,28 @@
   .hero-section h1 {
     font-size: 2rem;
   }
+  
+  .public-nav {
+    padding: 1rem;
+  }
+  
+  .logo h2 {
+    font-size: 1.2rem;
+  }
+  
+  .search-widget {
+    padding: 1.5rem 1rem;
+  }
+  
+  .cabin-info {
+    padding: 1rem;
+  }
+  
+  .cabin-info h4 {
+    font-size: 1.1rem;
+  }
+  
+  .pricing-box .amount {
+    font-size: 1.5rem;
+  }
 }
