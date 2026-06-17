@@ -30,6 +30,7 @@ const Calendar = () => {
 
   // Swipe-to-Select (Drag to Create) State
   const [dragCreate, setDragCreate] = useState({ active: false, cabinId: null, startDay: null, endDay: null });
+  const [isTextCollapsed, setIsTextCollapsed] = useState(window.innerWidth < 768);
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -218,13 +219,18 @@ const Calendar = () => {
         <h1>Calendario de Disponibilidad</h1>
         
         <div className="calendar-header-actions">
-          <button className="btn btn-primary btn-sm" onClick={() => {
-            setEditingRes(null);
-            setInitialDataForModal(null);
-            setIsModalOpen(true);
-          }}>
-            <Plus size={16} /> Crear Reserva
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => setIsTextCollapsed(!isTextCollapsed)}>
+              {isTextCollapsed ? 'Mostrar Textos' : 'Ocultar Textos'}
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => {
+              setEditingRes(null);
+              setInitialDataForModal(null);
+              setIsModalOpen(true);
+            }}>
+              <Plus size={16} /> Crear Reserva
+            </button>
+          </div>
           
           <div className="calendar-controls">
             <button className="btn-icon" onClick={prevMonth}>
@@ -323,19 +329,15 @@ const Calendar = () => {
                         : { backgroundColor: cabin.color || 'var(--accent-primary)', cursor: 'pointer' };
 
                       if (dayReservations.length > 1) {
-                         if (isEnd) {
-                             barClasses += ' end-day';
-                             customStyle.zIndex = 2;
-                             customStyle.right = 'calc(50% + 1px)';
-                             customStyle.borderTopRightRadius = '999px';
-                             customStyle.borderBottomRightRadius = '999px';
-                         } else if (isStart) {
-                             barClasses += ' start-day';
-                             customStyle.zIndex = 3;
-                             customStyle.left = 'calc(50% + 1px)';
-                             customStyle.borderTopLeftRadius = '999px';
-                             customStyle.borderBottomLeftRadius = '999px';
-                         }
+                         const total = dayReservations.length;
+                         customStyle.height = `calc((100% - 16px) / ${total})`;
+                         customStyle.top = `calc(8px + (100% - 16px) * ${index} / ${total})`;
+                         customStyle.bottom = 'auto';
+                         customStyle.border = '1px solid #FFFFFF';
+                         customStyle.boxSizing = 'border-box';
+                         
+                         if (isStart) barClasses += ' start-day';
+                         if (isEnd) barClasses += ' end-day';
                       } else {
                          if (isStart) barClasses += ' start-day';
                          if (isEnd) barClasses += ' end-day';
@@ -363,7 +365,18 @@ const Calendar = () => {
                           onMouseLeave={() => setPopover({ visible: false, res: null, x: 0, y: 0 })}
                         >
                           {isStart && !isBlock && (
-                            <span className="reservation-client" style={{ flexShrink: 0, maxWidth: `calc(${nights} * 42px - 16px)`, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }}>
+                            <span 
+                              className="reservation-client" 
+                              style={{ 
+                                flexShrink: 0, 
+                                maxWidth: isTextCollapsed ? '50px' : `calc(${nights} * 42px - 16px)`, 
+                                display: 'inline-block', 
+                                overflow: 'hidden', 
+                                textOverflow: 'ellipsis', 
+                                verticalAlign: 'middle',
+                                paddingLeft: '2px'
+                              }}
+                            >
                               {res.clientName} ({Number(res.adults || 0) + Number(res.childrenCount || 0) + Number(res.babiesCount || 0)} pax)
                             </span>
                           )}
