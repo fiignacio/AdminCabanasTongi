@@ -7,7 +7,7 @@ import { parseSafeDate } from '../utils/dateUtils';
 import './ReservationModal.css';
 
 const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) => {
-  const { cabins, prices, addReservation, updateReservation, reservations } = useStore();
+  const { cabins, prices, addReservation, updateReservation, reservations, referrers, addReferrer } = useStore();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -22,7 +22,9 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     isBlock: false,
     depositAmount: 0,
     paymentMethod: '',
-    clientPhone: ''
+    clientPhone: '',
+    referrerId: '',
+    referrerStatus: 'pending'
   });
   
   const [error, setError] = useState('');
@@ -37,7 +39,9 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         flightOut: reservationToEdit.flightOut || '',
         depositAmount: reservationToEdit.depositAmount || 0,
         paymentMethod: reservationToEdit.paymentMethod || '',
-        clientPhone: reservationToEdit.clientPhone || ''
+        clientPhone: reservationToEdit.clientPhone || '',
+        referrerId: reservationToEdit.referrerId || '',
+        referrerStatus: reservationToEdit.referrerStatus || 'pending'
       });
       setTotalCost(reservationToEdit.totalCost);
       setLastCalculatedCost(reservationToEdit.totalCost);
@@ -55,7 +59,9 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         isBlock: false,
         depositAmount: 0,
         paymentMethod: '',
-        clientPhone: ''
+        clientPhone: '',
+        referrerId: '',
+        referrerStatus: 'pending'
       });
       setTotalCost(0);
       setLastCalculatedCost(0);
@@ -73,7 +79,9 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         isBlock: false,
         depositAmount: 0,
         paymentMethod: '',
-        clientPhone: ''
+        clientPhone: '',
+        referrerId: '',
+        referrerStatus: 'pending'
       });
     }
   }, [reservationToEdit, initialData, cabins, isOpen]);
@@ -103,6 +111,14 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
   }, [formData.startDate, formData.endDate, formData.adults, formData.childrenCount, formData.isBlock, prices]);
 
   if (!isOpen) return null;
+
+  const handleCreateReferrer = () => {
+    const name = window.prompt('Nombre del nuevo referente o agencia:');
+    if (name && name.trim()) {
+      const newId = addReferrer({ name: name.trim(), createdAt: new Date().toISOString() });
+      setFormData(prev => ({ ...prev, referrerId: newId }));
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -266,6 +282,34 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
                   value={formData.clientPhone} 
                   onChange={handleChange} 
                 />
+              </div>
+            </div>
+          )}
+
+          {!formData.isBlock && (
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Referido por (Agencia/Tercero)</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select 
+                  name="referrerId" 
+                  className="form-input" 
+                  value={formData.referrerId || ''} 
+                  onChange={handleChange} 
+                  style={{ flex: 1 }}
+                >
+                  <option value="">Sin referente (Directo)</option>
+                  {referrers?.map(ref => (
+                    <option key={ref.id} value={ref.id}>{ref.name}</option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={handleCreateReferrer}
+                  style={{ padding: '0.5rem 1rem' }}
+                >
+                  + Nuevo
+                </button>
               </div>
             </div>
           )}

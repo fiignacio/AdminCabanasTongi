@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut, WifiOff, CloudOff } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut, WifiOff, CloudOff, Network } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import './Sidebar.css';
 
@@ -31,6 +31,7 @@ const Sidebar = ({ onClose }) => {
     { path: '/admin/reservations', name: 'Reservas', icon: <BookOpen size={20} /> },
     { path: '/admin/reports', name: 'Reportes', icon: <BarChart3 size={20} /> },
     { path: '/admin/tools/quote', name: 'Cotizador', icon: <Calculator size={20} /> },
+    { path: '/admin/referrers', name: 'Referentes', icon: <Network size={20} /> },
     { path: '/admin/tools/passengers', name: 'Pasajeros', icon: <Users size={20} /> },
     { path: '/admin/sync', name: 'Sincronización', icon: <RefreshCw size={20} /> },
     { path: '/admin/cars-settings', name: 'Flota Vehículos', icon: <Settings size={20} /> },

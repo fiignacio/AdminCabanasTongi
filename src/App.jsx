@@ -14,6 +14,7 @@ import PassengerRegistration from './pages/PassengerRegistration';
 import PublicBooking from './pages/PublicBooking';
 import SyncManager from './pages/SyncManager';
 import Login from './pages/Login';
+import Referrers from './pages/Referrers';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
           <Route path="cars-calendar" element={<CarCalendar />} />
           <Route path="reservations" element={<Reservations />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="referrers" element={<Referrers />} />
           <Route path="settings" element={<Admin />} />
           <Route path="cars-settings" element={<AdminCars />} />
           <Route path="sync" element={<SyncManager />} />

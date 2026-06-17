@@ -210,6 +210,36 @@ export const useStore = create(
           .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'car_reservations', null, id))
           .catch(e => get().handleMutationResponse(e, 'DELETE', 'car_reservations', null, id));
       },
+      // REFERRERS (Agencias/Clientes)
+      referrers: [],
+      addReferrer: (referrer) => {
+        const newRef = { ...referrer, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
+        set((state) => ({ referrers: [...state.referrers, newRef] }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('referrers').insert([newRef])
+          .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'referrers', newRef))
+          .catch(e => get().handleMutationResponse(e, 'INSERT', 'referrers', newRef));
+        
+        return newRef.id;
+      },
+      updateReferrer: (id, updatedData) => {
+        set((state) => ({ referrers: state.referrers.map(r => r.id === id ? { ...r, ...updatedData } : r) }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('referrers').update(updatedData).eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'UPDATE', 'referrers', updatedData, id))
+          .catch(e => get().handleMutationResponse(e, 'UPDATE', 'referrers', updatedData, id));
+      },
+      deleteReferrer: (id) => {
+        set((state) => ({ referrers: state.referrers.filter(r => r.id !== id) }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('referrers').delete().eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'referrers', null, id))
+          .catch(e => get().handleMutationResponse(e, 'DELETE', 'referrers', null, id));
+      },
+
       // Sync Configurations
       syncConfig: {
         supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
@@ -305,6 +335,13 @@ export const useStore = create(
         else if (carResData) {
           set({ carReservations: carResData });
         }
+
+        // Fetch Referrers
+        const { data: refData, error: refError } = await sb.from('referrers').select('*');
+        if (refError) console.error("Error referrers:", refError);
+        else if (refData) {
+          set({ referrers: refData });
+        }
       },
 
       // Realtime Sync
@@ -340,6 +377,7 @@ export const useStore = create(
           .on('postgres_changes', { event: '*', schema: 'public', table: 'cabins' }, handleRealtimeEvent('cabins', 'cabins'))
           .on('postgres_changes', { event: '*', schema: 'public', table: 'cars' }, handleRealtimeEvent('cars', 'cars'))
           .on('postgres_changes', { event: '*', schema: 'public', table: 'car_reservations' }, handleRealtimeEvent('car_reservations', 'carReservations'))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'referrers' }, handleRealtimeEvent('referrers', 'referrers'))
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
               console.log('✅ Conectado a Supabase Realtime');
