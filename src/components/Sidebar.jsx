@@ -56,19 +56,21 @@ const Sidebar = ({ onClose }) => {
       )}
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <NavLink 
-            key={item.path} 
-            to={item.path} 
-            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-          >
-            {item.icon}
-            <span>{item.name}</span>
-          </NavLink>
-        ))}
+        <div className="sidebar-scrollable" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', paddingRight: '0.25rem' }}>
+          {menuItems.map((item) => (
+            <NavLink 
+              key={item.path} 
+              to={item.path} 
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+            >
+              {item.icon}
+              <span>{item.name}</span>
+            </NavLink>
+          ))}
+        </div>
         
-        <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
+        <div className="sidebar-footer" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
           <NavLink 
             to="/" 
             className="nav-item"

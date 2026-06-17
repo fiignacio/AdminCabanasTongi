@@ -31,7 +31,8 @@
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  flex: 1;
+  overflow: hidden;
 }
 
 .nav-item {
