@@ -329,15 +329,13 @@ const Calendar = () => {
                         : { backgroundColor: cabin.color || 'var(--accent-primary)', cursor: 'pointer' };
 
                       if (dayReservations.length > 1) {
-                         const total = dayReservations.length;
-                         customStyle.height = `calc((100% - 16px) / ${total})`;
-                         customStyle.top = `calc(8px + (100% - 16px) * ${index} / ${total})`;
-                         customStyle.bottom = 'auto';
-                         customStyle.border = '1px solid #FFFFFF';
-                         customStyle.boxSizing = 'border-box';
-                         
-                         if (isStart) barClasses += ' start-day';
-                         if (isEnd) barClasses += ' end-day';
+                         if (isEnd) {
+                             barClasses += ' end-day half-left';
+                             customStyle.zIndex = 2;
+                         } else if (isStart) {
+                             barClasses += ' start-day half-right';
+                             customStyle.zIndex = 3;
+                         }
                       } else {
                          if (isStart) barClasses += ' start-day';
                          if (isEnd) barClasses += ' end-day';
