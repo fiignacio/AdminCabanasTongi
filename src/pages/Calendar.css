@@ -113,9 +113,9 @@
 }
 
 .cabin-name-cell.collapsed, .cabin-name-header.collapsed {
-  min-width: 45px !important;
-  max-width: 45px !important;
-  padding: 0.5rem !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  padding: 0.4rem !important;
   justify-content: center;
 }
 
@@ -342,12 +342,22 @@
   }
   
   .day-cell {
-    height: 50px;
+    height: 44px;
   }
   
   .calendar-cell {
-    min-width: 38px;
+    min-width: 32px;
     padding: 0.25rem 0.15rem;
+  }
+  
+  .day-name {
+    font-size: 0.65rem;
+  }
+
+  .day-number {
+    font-size: 0.85rem;
+    width: 22px;
+    height: 22px;
   }
   
   .day-header {
@@ -359,6 +369,6 @@
   }
   
   .reservation-client {
-    font-size: 0.65rem;
+    font-size: 0.55rem;
   }
 }
