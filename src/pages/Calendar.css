@@ -103,7 +103,9 @@
   position: -webkit-sticky;
   position: sticky;
   left: 0;
-  z-index: 100 !important; /* Force above all gantt bars */
+  z-index: 100 !important;
+  transform: translateZ(1px); /* Force hardware layer to fix mobile z-index bug */
+  -webkit-transform: translateZ(1px);
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 2px 0 5px rgba(0,0,0,0.03); /* Subtle shadow for depth */
   gap: 10px;
