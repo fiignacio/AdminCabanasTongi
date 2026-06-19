@@ -42,7 +42,7 @@ const Sidebar = ({ onClose }) => {
     <aside className="sidebar glass-panel">
       <div className="sidebar-header">
         <Tent className="logo-icon" size={28} />
-        <h2 style={{ fontSize: '1.25rem' }}>Cabañas Manuara</h2>
+        <h2>Cabañas Manuara</h2>
       </div>
       
       {!isOnline && (
@@ -57,7 +57,7 @@ const Sidebar = ({ onClose }) => {
       )}
 
       <nav className="sidebar-nav">
-        <div className="sidebar-scrollable" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', paddingRight: '0.25rem' }}>
+        <div className="sidebar-scrollable" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto', scrollbarWidth: 'thin' }}>
           {menuItems.map((item) => (
             <NavLink 
               key={item.path} 
