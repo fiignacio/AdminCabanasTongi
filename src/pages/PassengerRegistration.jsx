@@ -437,7 +437,7 @@ export default function PassengerRegistration() {
 
               <div className="invoice-footer">
                 <p><strong>Cabañas Manuara</strong> - Isla de Pascua, Chile</p>
-                <p>Contacto: cabanasmanuara@gmail.com | +56 9 1234 5678</p>
+                <p>Contacto: cabanasmanuara@gmail.com | +56 9 8456 2244</p>
                 <p style={{ marginTop: '1rem', opacity: 0.7, fontSize: '0.75rem' }}>
                   Documento generado automáticamente por Manuara App
                 </p>
