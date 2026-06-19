@@ -373,7 +373,7 @@ export default function PassengerRegistration() {
                 </div>
                 <div className="invoice-header-right">
                   <h3 className="invoice-doc-type">CONFIRMACIÓN DE RESERVA</h3>
-                  <div className="invoice-date">Emitido: {formatSafeDate(new Date().toISOString(), 'dd MMM yyyy')}</div>
+                  <div className="invoice-date">Emitido: {formatSafeDate(new Date(), 'dd MMM yyyy')}</div>
                 </div>
               </div>
 
