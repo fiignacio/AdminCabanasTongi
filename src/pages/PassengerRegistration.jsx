@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
-import { Download, Users, FileText, Plane, PlaneTakeoff, PlaneLanding, Mail, Trash2, Plus, Share2 } from 'lucide-react';
+import { Download, Users, FileText, Plane, PlaneTakeoff, PlaneLanding, Mail, Trash2, Plus, Share2, Tent } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useStore, getSupabase } from '../store/useStore';
 import { generateWhatsAppLink, generateInvitationMessage } from '../utils/whatsapp';
+import { formatSafeDate } from '../utils/dateUtils';
 import './PassengerRegistration.css';
 
 export default function PassengerRegistration() {
@@ -161,7 +162,7 @@ export default function PassengerRegistration() {
   const [isUploading, setIsUploading] = useState(false);
 
   const getPdfOptions = () => ({
-    margin: [0.5, 1, 0.5, 1],
+    margin: [0, 0, 0, 0],
     filename: `CARTA_DE_INVITACION_${titular ? titular.toUpperCase().replace(/\s+/g, '_') : 'SIN_NOMBRE'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FAF7F2' },
@@ -359,64 +360,89 @@ export default function PassengerRegistration() {
           </div>
         </div>
 
-        {/* Right Panel: PDF Preview */}
         <div className="right-panel">
           <div style={{ width: '100%', minWidth: isExporting ? '800px' : 'auto', transition: 'min-width 0.1s' }}>
             <div className="card glass-panel invoice-preview-container" style={{ padding: 0, background: '#FAF7F2' }} ref={invoiceRef}>
               <div className="invoice-header">
-                <h2 className="invoice-title">CABAÑAS MANUARA</h2>
-              <div className="invoice-subtitle">CÓDIGO SERNATUR: 34494</div>
-              <h3 className="invoice-doc-type">CONFIRMACIÓN DE RESERVA</h3>
-            </div>
-
-            <div className="invoice-body">
-              <div className="invoice-section">
-                <div className="invoice-section-title">DETALLES DE LA RESERVA</div>
-                <div className="invoice-detail-row">
-                  <strong>Titular de la Reserva:</strong> <span>{titular || '—'}</span>
+                <div className="invoice-brand">
+                  <Tent size={48} color="#D35400" />
+                  <div>
+                    <h2 className="invoice-title">CABAÑAS MANUARA</h2>
+                    <div className="invoice-subtitle">CÓDIGO SERNATUR: 34494</div>
+                  </div>
                 </div>
-                <div className="invoice-detail-row">
-                  <strong>Fecha de Entrada:</strong> <span>{checkIn || '—'}</span>
-                </div>
-                <div className="invoice-detail-row">
-                  <strong>Fecha de Salida:</strong> <span>{checkOut || '—'}</span>
-                </div>
-                <div className="invoice-detail-row">
-                  <strong>Vuelo de Entrada:</strong> <span>{flightIn || '—'}</span>
-                </div>
-                <div className="invoice-detail-row">
-                  <strong>Vuelo de Salida:</strong> <span>{flightOut || '—'}</span>
+                <div className="invoice-header-right">
+                  <h3 className="invoice-doc-type">CONFIRMACIÓN DE RESERVA</h3>
+                  <div className="invoice-date">Emitido: {formatSafeDate(new Date().toISOString(), 'dd MMM yyyy')}</div>
                 </div>
               </div>
 
-              <div className="invoice-section">
-                <div className="invoice-section-title">LISTA DE PASAJEROS</div>
-                <table className="invoice-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '50px' }}>N°</th>
-                      <th>Nombre Completo</th>
-                      <th>RUT / Pasaporte</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {passengers.map((p, i) => (
-                      <tr key={i}>
-                        <td>{i + 1}</td>
-                        <td>{p.name || '—'}</td>
-                        <td>{p.rut || '—'}</td>
-                      </tr>
-                    ))}
-                    {passengers.length === 0 && (
+              <div className="invoice-body">
+                <div className="invoice-section">
+                  <div className="invoice-section-title">DETALLES DE LA RESERVA</div>
+                  <div className="invoice-section-content invoice-detail-grid">
+                    <div className="invoice-detail-item" style={{ gridColumn: '1 / -1' }}>
+                      <span className="invoice-detail-label">Titular de la Reserva</span>
+                      <span className="invoice-detail-value">{titular || '—'}</span>
+                    </div>
+                    <div className="invoice-detail-item">
+                      <span className="invoice-detail-label">Fecha de Entrada</span>
+                      <span className="invoice-detail-value">{checkIn ? formatSafeDate(checkIn, 'dd MMM yyyy') : '—'}</span>
+                    </div>
+                    <div className="invoice-detail-item">
+                      <span className="invoice-detail-label">Fecha de Salida</span>
+                      <span className="invoice-detail-value">{checkOut ? formatSafeDate(checkOut, 'dd MMM yyyy') : '—'}</span>
+                    </div>
+                    <div className="invoice-detail-item">
+                      <span className="invoice-detail-label">Vuelo de Entrada</span>
+                      <span className="invoice-detail-value">{flightIn || '—'}</span>
+                    </div>
+                    <div className="invoice-detail-item">
+                      <span className="invoice-detail-label">Vuelo de Salida</span>
+                      <span className="invoice-detail-value">{flightOut || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="invoice-section">
+                  <div className="invoice-section-title">LISTA DE PASAJEROS ({passengers.length})</div>
+                  <table className="invoice-table">
+                    <thead>
                       <tr>
-                        <td colSpan="3" style={{ textAlign: 'center', color: '#666' }}>Sin pasajeros registrados.</td>
+                        <th style={{ width: '50px' }}>N°</th>
+                        <th>Nombre Completo</th>
+                        <th>RUT / Pasaporte</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {passengers.length === 0 ? (
+                        <tr>
+                          <td colSpan="3" style={{ textAlign: 'center', color: '#706258', padding: '2rem' }}>
+                            No hay pasajeros registrados
+                          </td>
+                        </tr>
+                      ) : (
+                        passengers.map((p, idx) => (
+                          <tr key={idx}>
+                            <td style={{ color: '#D35400', fontWeight: 'bold' }}>{idx + 1}</td>
+                            <td>{p.name || '—'}</td>
+                            <td>{p.rut || '—'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="invoice-footer">
+                <p><strong>Cabañas Manuara</strong> - Isla de Pascua, Chile</p>
+                <p>Contacto: cabanasmanuara@gmail.com | +56 9 1234 5678</p>
+                <p style={{ marginTop: '1rem', opacity: 0.7, fontSize: '0.75rem' }}>
+                  Documento generado automáticamente por Manuara App
+                </p>
               </div>
             </div>
-          </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', width: '100%' }}>
             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleExportPDF} disabled={isExporting}>
