@@ -110,6 +110,39 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.startDate, formData.endDate, formData.adults, formData.childrenCount, formData.isBlock, prices]);
 
+  const checkCabinAvailability = (cabinId) => {
+    if (!formData.startDate || !formData.endDate) return true;
+    
+    const start = parseSafeDate(formData.startDate);
+    const end = parseSafeDate(formData.endDate);
+    
+    if (start >= end) return true;
+    
+    return !reservations.some(res => {
+      if (res.status === 'archived') return false;
+      if (reservationToEdit && res.id === reservationToEdit.id) return false;
+      if (res.cabinId !== cabinId) return false;
+
+      const resStart = parseSafeDate(res.startDate);
+      const resEnd = parseSafeDate(res.endDate);
+      
+      // Standard overlap check: strictly overlaps (not adjacent)
+      return start < resEnd && end > resStart;
+    });
+  };
+
+  useEffect(() => {
+    if (formData.startDate && formData.endDate) {
+      const isCurrentAvailable = checkCabinAvailability(formData.cabinId);
+      if (!isCurrentAvailable) {
+        const firstAvailable = cabins.find(c => checkCabinAvailability(c.id));
+        if (firstAvailable) {
+          setFormData(prev => ({ ...prev, cabinId: firstAvailable.id }));
+        }
+      }
+    }
+  }, [formData.startDate, formData.endDate]); // eslint-disable-next-line react-hooks/exhaustive-deps
+
   if (!isOpen) return null;
 
   const handleCreateReferrer = () => {
@@ -251,11 +284,18 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
               onChange={handleChange} 
               required
             >
-              {cabins.map(cabin => (
-                <option key={cabin.id} value={cabin.id}>
-                  {cabin.name} (Max {cabin.maxCapacity} pers.)
-                </option>
-              ))}
+              {cabins.map(cabin => {
+                const isAvailable = checkCabinAvailability(cabin.id);
+                return (
+                  <option 
+                    key={cabin.id} 
+                    value={cabin.id}
+                    disabled={!isAvailable}
+                  >
+                    {cabin.name} (Max {cabin.maxCapacity} pers.){!isAvailable ? ' - ⛔ Ocupada en estas fechas' : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
