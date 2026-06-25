@@ -275,28 +275,66 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
             </label>
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">{formData.isBlock ? 'Inicio Bloqueo' : 'Llegada'}</label>
+              <input 
+                type="date" 
+                name="startDate" 
+                className="form-input" 
+                value={formData.startDate} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{formData.isBlock ? 'Fin Bloqueo' : 'Salida'}</label>
+              <input 
+                type="date" 
+                name="endDate" 
+                className="form-input" 
+                value={formData.endDate} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+          </div>
+
+          {formData.startDate && (() => {
+            const season = getSeason(formData.startDate);
+            return (
+              <div style={{ marginBottom: '1rem', padding: '0.5rem', borderRadius: '8px', background: season === 'Alta' ? 'rgba(231, 76, 60, 0.1)' : 'rgba(52, 152, 219, 0.1)', color: season === 'Alta' ? 'var(--danger)' : 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                <span style={{ marginRight: '8px' }}>{season === 'Alta' ? '🔥' : '❄️'}</span>
+                Temporada de la reserva: {season}
+              </div>
+            );
+          })()}
+
           <div className="form-group">
-            <label className="form-label">Cabaña</label>
-            <select 
-              name="cabinId" 
-              className="form-input" 
-              value={formData.cabinId} 
-              onChange={handleChange} 
-              required
-            >
+            <label className="form-label">Selección de Cabaña</label>
+            <div className="cabin-selector-grid">
               {cabins.map(cabin => {
                 const isAvailable = checkCabinAvailability(cabin.id);
+                const isSelected = formData.cabinId === cabin.id;
+                
                 return (
-                  <option 
-                    key={cabin.id} 
-                    value={cabin.id}
-                    disabled={!isAvailable}
+                  <div 
+                    key={cabin.id}
+                    className={`cabin-pill ${isAvailable ? 'available' : 'unavailable'} ${isSelected ? 'selected' : ''}`}
+                    onClick={() => {
+                      if (isAvailable) {
+                        setFormData(prev => ({ ...prev, cabinId: cabin.id }));
+                      }
+                    }}
                   >
-                    {cabin.name} (Max {cabin.maxCapacity} pers.){!isAvailable ? ' - ⛔ Ocupada en estas fechas' : ''}
-                  </option>
+                    <div className="cabin-pill-name">{cabin.name}</div>
+                    <div className="cabin-pill-cap">Max {cabin.maxCapacity} pers.</div>
+                    {!isAvailable && <div className="cabin-pill-status">⛔ Ocupada</div>}
+                    {isAvailable && <div className="cabin-pill-status">✅ Disponible</div>}
+                  </div>
                 );
               })}
-            </select>
+            </div>
           </div>
 
           {!formData.isBlock && (
@@ -353,41 +391,6 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
               </div>
             </div>
           )}
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">{formData.isBlock ? 'Inicio Bloqueo' : 'Llegada'}</label>
-              <input 
-                type="date" 
-                name="startDate" 
-                className="form-input" 
-                value={formData.startDate} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">{formData.isBlock ? 'Fin Bloqueo' : 'Salida'}</label>
-              <input 
-                type="date" 
-                name="endDate" 
-                className="form-input" 
-                value={formData.endDate} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-          </div>
-
-          {formData.startDate && (() => {
-            const season = getSeason(formData.startDate);
-            return (
-              <div style={{ marginBottom: '1rem', padding: '0.5rem', borderRadius: '8px', background: season === 'Alta' ? 'rgba(231, 76, 60, 0.1)' : 'rgba(52, 152, 219, 0.1)', color: season === 'Alta' ? 'var(--danger)' : 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                <span style={{ marginRight: '8px' }}>{season === 'Alta' ? '🔥' : '❄️'}</span>
-                Temporada de la reserva: {season}
-              </div>
-            );
-          })()}
 
           {!formData.isBlock && (
             <>

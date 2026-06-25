@@ -90,3 +90,88 @@
   gap: 1rem;
   margin-top: 2rem;
 }
+
+.cabin-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.cabin-pill {
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cabin-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.cabin-pill.unavailable {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+  background: rgba(0,0,0,0.2);
+}
+
+.cabin-pill.unavailable:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--glass-border);
+}
+
+.cabin-pill.selected {
+  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+.cabin-pill.selected.available {
+  border-color: var(--success);
+  background: rgba(46, 204, 113, 0.15);
+  box-shadow: 0 0 0 2px var(--success);
+}
+
+.cabin-pill-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 2px;
+}
+
+.cabin-pill-cap {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+.cabin-pill-status {
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.2);
+}
+
+.cabin-pill.available .cabin-pill-status {
+  color: var(--success);
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.cabin-pill.unavailable .cabin-pill-status {
+  color: var(--danger);
+  background: rgba(231, 76, 60, 0.1);
+}
