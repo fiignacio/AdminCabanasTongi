@@ -135,6 +135,8 @@ export const useStore = create(
         if (sb) sb.from('reservations').insert([newRes])
           .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'reservations', newRes))
           .catch(e => get().handleMutationResponse(e, 'INSERT', 'reservations', newRes));
+          
+        return newRes.id;
       },
       updateReservation: (id, updatedData) => {
         set((state) => ({ reservations: state.reservations.map(res => res.id === id ? { ...res, ...updatedData } : res) }));

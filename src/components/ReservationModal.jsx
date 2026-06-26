@@ -7,8 +7,16 @@ import { parseSafeDate } from '../utils/dateUtils';
 import './ReservationModal.css';
 
 const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) => {
-  const { cabins, prices, addReservation, updateReservation, reservations, referrers, addReferrer } = useStore();
+  const { cabins, prices, addReservation, updateReservation, reservations, referrers, addReferrer, cars, carReservations, addCarReservation, updateCarReservation, deleteCarReservation } = useStore();
   const navigate = useNavigate();
+  
+  const [carData, setCarData] = useState({
+    hasCar: false,
+    carId: '',
+    carTotalCost: 0,
+    carDepositAmount: 0,
+    linkedCarResId: null
+  });
   
   const [formData, setFormData] = useState({
     cabinId: '',
@@ -33,6 +41,15 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
 
   useEffect(() => {
     if (reservationToEdit) {
+      const linked = carReservations.find(cr => cr.linkedCabinReservationId === reservationToEdit.id);
+      setCarData({
+        hasCar: !!linked,
+        carId: linked ? linked.carId : '',
+        carTotalCost: linked ? linked.totalCost : 0,
+        carDepositAmount: linked ? linked.depositAmount : 0,
+        linkedCarResId: linked ? linked.id : null
+      });
+
       setFormData({
         ...reservationToEdit,
         flightIn: reservationToEdit.flightIn || '',
@@ -46,6 +63,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       setTotalCost(reservationToEdit.totalCost);
       setLastCalculatedCost(reservationToEdit.totalCost);
     } else if (initialData) {
+      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null });
       setFormData({
         cabinId: initialData.cabinId || cabins[0]?.id || '',
         clientName: '',
@@ -66,6 +84,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       setTotalCost(0);
       setLastCalculatedCost(0);
     } else {
+      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null });
       setFormData({
         cabinId: cabins[0]?.id || '',
         clientName: '',
@@ -109,6 +128,23 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.startDate, formData.endDate, formData.adults, formData.childrenCount, formData.isBlock, prices]);
+
+  useEffect(() => {
+    if (carData.hasCar && carData.carId && formData.startDate && formData.endDate) {
+      const s = parseSafeDate(formData.startDate);
+      const e = parseSafeDate(formData.endDate);
+      if (s >= e) return;
+      const d = Math.max(1, Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24)));
+      const c = cars.find(car => car.id === carData.carId);
+      if (c) {
+        const rate = (c.promoThresholdDays > 0 && d >= c.promoThresholdDays) ? c.promoDailyRate : c.dailyRate;
+        const suggested = rate * d;
+        if (carData.carTotalCost === 0) {
+           setCarData(prev => ({ ...prev, carTotalCost: suggested }));
+        }
+      }
+    }
+  }, [carData.hasCar, carData.carId, formData.startDate, formData.endDate, cars]);
 
   const checkCabinAvailability = (cabinId) => {
     if (!formData.startDate || !formData.endDate) return true;
@@ -211,6 +247,20 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       if (!confirmSave) return;
     }
 
+    if (!formData.isBlock && carData.hasCar && carData.carId) {
+      const isCarOverlapping = carReservations.some(res => {
+        if (res.carId !== carData.carId) return false;
+        if (carData.linkedCarResId && res.id === carData.linkedCarResId) return false;
+        const resStart = parseSafeDate(res.startDate);
+        const resEnd = parseSafeDate(res.endDate);
+        return start < resEnd && end > resStart;
+      });
+      if (isCarOverlapping) {
+        setError('El vehículo seleccionado ya está reservado en estas fechas.');
+        return;
+      }
+    }
+
     const payload = {
       ...formData,
       clientName: formData.isBlock ? 'Bloqueo/Mantenimiento' : formData.clientName,
@@ -220,8 +270,43 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
 
     if (reservationToEdit) {
       updateReservation(reservationToEdit.id, payload);
+      if (!formData.isBlock) {
+        if (carData.hasCar && carData.carId) {
+          const carPayload = {
+            carId: carData.carId,
+            clientName: formData.clientName,
+            clientPhone: formData.clientPhone,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            totalCost: carData.carTotalCost,
+            depositAmount: carData.carDepositAmount,
+            status: 'confirmed',
+            linkedCabinReservationId: reservationToEdit.id
+          };
+          if (carData.linkedCarResId) {
+            updateCarReservation(carData.linkedCarResId, carPayload);
+          } else {
+            addCarReservation(carPayload);
+          }
+        } else if (carData.linkedCarResId) {
+          deleteCarReservation(carData.linkedCarResId);
+        }
+      }
     } else {
-      addReservation(payload);
+      const newCabinResId = addReservation(payload);
+      if (!formData.isBlock && carData.hasCar && carData.carId && newCabinResId) {
+        addCarReservation({
+            carId: carData.carId,
+            clientName: formData.clientName,
+            clientPhone: formData.clientPhone,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            totalCost: carData.carTotalCost,
+            depositAmount: carData.carDepositAmount,
+            status: 'confirmed',
+            linkedCabinReservationId: newCabinResId
+        });
+      }
     }
     
     onClose();
@@ -544,10 +629,65 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
                   </select>
                 </div>
               </div>
+
+              <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={carData.hasCar} 
+                    onChange={e => {
+                       const checked = e.target.checked;
+                       setCarData(prev => ({ ...prev, hasCar: checked, carTotalCost: checked && prev.carTotalCost === 0 ? 0 : prev.carTotalCost }));
+                    }} 
+                  />
+                  🚗 Vincular Arriendo de Vehículo
+                </label>
+
+                {carData.hasCar && (
+                  <div style={{ marginTop: '1rem', background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                    <div className="form-group">
+                      <label className="form-label">Vehículo</label>
+                      <select 
+                        className="form-input" 
+                        value={carData.carId} 
+                        onChange={e => setCarData(prev => ({ ...prev, carId: e.target.value, carTotalCost: 0 }))}
+                        required={carData.hasCar}
+                      >
+                        <option value="">Seleccione un vehículo...</option>
+                        {cars.map(c => (
+                          <option key={c.id} value={c.id}>{c.name} ({c.plate}) - ${c.dailyRate}/día</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-row" style={{ marginTop: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Total Arriendo Auto ($)</label>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          value={carData.carTotalCost} 
+                          onChange={e => setCarData(prev => ({ ...prev, carTotalCost: Number(e.target.value) }))}
+                          required={carData.hasCar}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Abono Auto ($)</label>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          value={carData.carDepositAmount} 
+                          onChange={e => setCarData(prev => ({ ...prev, carDepositAmount: Number(e.target.value) }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
-          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: '1.5rem' }}>
             <div style={{ flex: 1 }}>
               {!formData.isBlock && (
                 <button 

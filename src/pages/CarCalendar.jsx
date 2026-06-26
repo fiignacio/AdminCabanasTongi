@@ -392,6 +392,7 @@ const CarCalendar = () => {
                       const resEnd = startOfDay(parseSafeDate(res.endDate));
                       const isStart = isSameDay(resStart, currentDay);
                       const isEnd = isSameDay(resEnd, currentDay);
+                      const nights = Math.max(1, Math.ceil(Math.abs(resEnd - resStart) / (1000 * 60 * 60 * 24)));
 
                       let barClasses = `reservation-bar ${isBlock ? 'blocked' : ''}`;
                       let customStyle = isBlock 
