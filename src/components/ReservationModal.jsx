@@ -18,7 +18,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     linkedCarResId: null,
     isFullStay: true,
     startDate: '',
-    endDate: ''
+    endDate: '',
+    carPaymentMethod: ''
   });
   
   const [formData, setFormData] = useState({
@@ -54,7 +55,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         linkedCarResId: linked ? linked.id : null,
         isFullStay: isFullStay,
         startDate: linked ? linked.startDate : '',
-        endDate: linked ? linked.endDate : ''
+        endDate: linked ? linked.endDate : '',
+        carPaymentMethod: linked ? linked.paymentMethod || '' : ''
       });
 
       setFormData({
@@ -70,7 +72,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       setTotalCost(reservationToEdit.totalCost);
       setLastCalculatedCost(reservationToEdit.totalCost);
     } else if (initialData) {
-      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null, isFullStay: true, startDate: '', endDate: '' });
+      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null, isFullStay: true, startDate: '', endDate: '', carPaymentMethod: '' });
       setFormData({
         cabinId: initialData.cabinId || cabins[0]?.id || '',
         clientName: '',
@@ -91,7 +93,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       setTotalCost(0);
       setLastCalculatedCost(0);
     } else {
-      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null, isFullStay: true, startDate: '', endDate: '' });
+      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null, isFullStay: true, startDate: '', endDate: '', carPaymentMethod: '' });
       setFormData({
         cabinId: cabins[0]?.id || '',
         clientName: '',
@@ -297,6 +299,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
             endDate: carData.isFullStay ? formData.endDate : carData.endDate,
             totalCost: carData.carTotalCost,
             depositAmount: carData.carDepositAmount,
+            paymentMethod: carData.carPaymentMethod,
             status: 'confirmed',
             linkedCabinReservationId: reservationToEdit.id
           };
@@ -320,6 +323,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
             endDate: carData.isFullStay ? formData.endDate : carData.endDate,
             totalCost: carData.carTotalCost,
             depositAmount: carData.carDepositAmount,
+            paymentMethod: carData.carPaymentMethod,
             status: 'confirmed',
             linkedCabinReservationId: newCabinResId
         });
@@ -741,19 +745,75 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Abono Auto ($)</label>
+                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>Abono Auto ($)</span>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 'normal', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-primary)' }}>
+                            <input 
+                              type="checkbox" 
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setCarData(prev => ({ ...prev, carDepositAmount: Math.round(carData.carTotalCost * 0.5) }));
+                                } else {
+                                  setCarData(prev => ({ ...prev, carDepositAmount: 0 }));
+                                }
+                              }}
+                            />
+                            50% Abono
+                          </label>
+                        </label>
                         <input 
                           type="number" 
                           className="form-input" 
                           value={carData.carDepositAmount} 
                           onChange={e => setCarData(prev => ({ ...prev, carDepositAmount: Number(e.target.value) }))}
                         />
+                        {carData.carDepositAmount > 0 && carData.carTotalCost > 0 && (
+                          <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.5rem' }}>
+                            Saldo Pendiente Auto: <strong style={{ color: 'var(--danger)' }}>${(carData.carTotalCost - carData.carDepositAmount).toLocaleString('es-CL')}</strong>
+                          </small>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Medio de Pago (Auto)</label>
+                        <select 
+                          name="carPaymentMethod" 
+                          className="form-input" 
+                          value={carData.carPaymentMethod} 
+                          onChange={e => setCarData(prev => ({ ...prev, carPaymentMethod: e.target.value }))}
+                        >
+                          <option value="">Seleccione...</option>
+                          <option value="Transferencia">Transferencia</option>
+                          <option value="Efectivo">Efectivo</option>
+                          <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                          <option value="Tarjeta de Débito">Tarjeta de Débito</option>
+                          <option value="Otro">Otro</option>
+                        </select>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
             </>
+          )}
+
+          {!formData.isBlock && (
+            <div style={{ marginTop: '1.5rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Resumen de la Reserva</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}>
+                <span>Total Cabaña:</span>
+                <strong>${totalCost.toLocaleString('es-CL')}</strong>
+              </div>
+              {carData.hasCar && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}>
+                  <span>Total Vehículo:</span>
+                  <strong>${carData.carTotalCost.toLocaleString('es-CL')}</strong>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--border-color)', color: 'var(--success)' }}>
+                <span><strong>Total General:</strong></span>
+                <strong>${(totalCost + (carData.hasCar ? carData.carTotalCost : 0)).toLocaleString('es-CL')}</strong>
+              </div>
+            </div>
           )}
 
           <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: '1.5rem' }}>

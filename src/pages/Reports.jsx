@@ -6,7 +6,7 @@ import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
 import './Reports.css';
 
 const Reports = () => {
-  const { reservations, cabins } = useStore();
+  const { reservations, cabins, carReservations, cars } = useStore();
   const [filterType, setFilterType] = useState('owner'); // 'owner' or 'cabin'
   const [selectedFilter, setSelectedFilter] = useState('all');
   
@@ -55,8 +55,29 @@ const Reports = () => {
 
   }, [reservations, cabins, filterType, selectedFilter, selectedMonth, selectedYear]);
 
+  const filteredCarReservations = useMemo(() => {
+    let results = carReservations;
+    if (selectedMonth !== 'all') {
+      results = results.filter(res => {
+        const d = parseSafeDate(res.startDate);
+        return d.getMonth().toString() === selectedMonth && d.getFullYear().toString() === selectedYear;
+      });
+    }
+    return results.filter(res => res.status === 'confirmed');
+  }, [carReservations, selectedMonth, selectedYear]);
+
   const totalIncome = filteredReservations.reduce((acc, res) => acc + Number(res.totalCost), 0);
   const totalReservations = filteredReservations.length;
+
+  const totalCarIncome = filteredCarReservations.reduce((acc, res) => acc + Number(res.totalCost), 0);
+  const carIncomeByCar = cars.map(car => {
+    const resForCar = filteredCarReservations.filter(r => r.carId === car.id);
+    return {
+      car,
+      total: resForCar.reduce((acc, r) => acc + Number(r.totalCost), 0),
+      count: resForCar.length
+    };
+  }).filter(c => c.total > 0 || c.count > 0);
 
   const handleFilterTypeChange = (e) => {
     setFilterType(e.target.value);
@@ -139,19 +160,42 @@ const Reports = () => {
         <div className="stat-card glass-panel">
           <div className="stat-icon"><BarChart3 size={24} /></div>
           <div className="stat-info">
-            <span className="stat-label">Ingresos Totales Generados</span>
+            <span className="stat-label">Ingresos Cabañas</span>
             <h2 className="stat-value text-success">${totalIncome.toLocaleString('es-CL')}</h2>
           </div>
         </div>
 
-        <div className="stat-card glass-panel">
-          <div className="stat-icon"><BarChart3 size={24} /></div>
+        <div className="stat-card glass-panel" style={{ borderLeft: '4px solid var(--accent-primary)' }}>
+          <div className="stat-icon" style={{ color: 'var(--accent-primary)', background: 'rgba(59,130,246,0.1)' }}><BarChart3 size={24} /></div>
           <div className="stat-info">
-            <span className="stat-label">Cantidad de Reservas</span>
-            <h2 className="stat-value">{totalReservations}</h2>
+            <span className="stat-label">Ingresos Vehículos</span>
+            <h2 className="stat-value" style={{ color: 'var(--accent-primary)' }}>${totalCarIncome.toLocaleString('es-CL')}</h2>
+          </div>
+        </div>
+
+        <div className="stat-card glass-panel">
+          <div className="stat-icon" style={{ color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)' }}><BarChart3 size={24} /></div>
+          <div className="stat-info">
+            <span className="stat-label">Ingresos Totales (Global)</span>
+            <h2 className="stat-value" style={{ color: '#8b5cf6' }}>${(totalIncome + totalCarIncome).toLocaleString('es-CL')}</h2>
           </div>
         </div>
       </div>
+
+      {carIncomeByCar.length > 0 && (
+        <div className="card glass-panel" style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+          <h3 style={{ margin: '0 0 1rem 0' }}>Desglose por Vehículo (Para pagos a terceros)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            {carIncomeByCar.map(item => (
+              <div key={item.car.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: '#334155' }}>{item.car.name} ({item.car.plate})</h4>
+                <p style={{ margin: '0 0 0.2rem 0', fontSize: '0.9rem', color: '#64748b' }}>{item.count} Arriendos</p>
+                <p style={{ margin: '0', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>${item.total.toLocaleString('es-CL')}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Contenedor Ref para el PDF */}
       <div className="card glass-panel table-container" ref={reportRef} style={{ background: '#fff', color: '#333' }}>
