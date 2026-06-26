@@ -15,7 +15,10 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     carId: '',
     carTotalCost: 0,
     carDepositAmount: 0,
-    linkedCarResId: null
+    linkedCarResId: null,
+    isFullStay: true,
+    startDate: '',
+    endDate: ''
   });
   
   const [formData, setFormData] = useState({
@@ -42,12 +45,16 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
   useEffect(() => {
     if (reservationToEdit) {
       const linked = carReservations.find(cr => cr.linkedCabinReservationId === reservationToEdit.id);
+      const isFullStay = linked ? (linked.startDate === reservationToEdit.startDate && linked.endDate === reservationToEdit.endDate) : true;
       setCarData({
         hasCar: !!linked,
         carId: linked ? linked.carId : '',
         carTotalCost: linked ? linked.totalCost : 0,
         carDepositAmount: linked ? linked.depositAmount : 0,
-        linkedCarResId: linked ? linked.id : null
+        linkedCarResId: linked ? linked.id : null,
+        isFullStay: isFullStay,
+        startDate: linked ? linked.startDate : '',
+        endDate: linked ? linked.endDate : ''
       });
 
       setFormData({
@@ -63,7 +70,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       setTotalCost(reservationToEdit.totalCost);
       setLastCalculatedCost(reservationToEdit.totalCost);
     } else if (initialData) {
-      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null });
+      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null, isFullStay: true, startDate: '', endDate: '' });
       setFormData({
         cabinId: initialData.cabinId || cabins[0]?.id || '',
         clientName: '',
@@ -84,7 +91,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
       setTotalCost(0);
       setLastCalculatedCost(0);
     } else {
-      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null });
+      setCarData({ hasCar: false, carId: '', carTotalCost: 0, carDepositAmount: 0, linkedCarResId: null, isFullStay: true, startDate: '', endDate: '' });
       setFormData({
         cabinId: cabins[0]?.id || '',
         clientName: '',
@@ -130,9 +137,11 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
   }, [formData.startDate, formData.endDate, formData.adults, formData.childrenCount, formData.isBlock, prices]);
 
   useEffect(() => {
-    if (carData.hasCar && carData.carId && formData.startDate && formData.endDate) {
-      const s = parseSafeDate(formData.startDate);
-      const e = parseSafeDate(formData.endDate);
+    const sDate = carData.isFullStay ? formData.startDate : carData.startDate;
+    const eDate = carData.isFullStay ? formData.endDate : carData.endDate;
+    if (carData.hasCar && carData.carId && sDate && eDate) {
+      const s = parseSafeDate(sDate);
+      const e = parseSafeDate(eDate);
       if (s >= e) return;
       const d = Math.max(1, Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24)));
       const c = cars.find(car => car.id === carData.carId);
@@ -144,7 +153,7 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         }
       }
     }
-  }, [carData.hasCar, carData.carId, formData.startDate, formData.endDate, cars]);
+  }, [carData.hasCar, carData.carId, carData.isFullStay, carData.startDate, carData.endDate, formData.startDate, formData.endDate, cars]);
 
   const checkCabinAvailability = (cabinId) => {
     if (!formData.startDate || !formData.endDate) return true;
@@ -248,12 +257,20 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     }
 
     if (!formData.isBlock && carData.hasCar && carData.carId) {
+      const cStart = parseSafeDate(carData.isFullStay ? formData.startDate : carData.startDate);
+      const cEnd = parseSafeDate(carData.isFullStay ? formData.endDate : carData.endDate);
+      
+      if (cStart >= cEnd) {
+        setError('Las fechas del vehículo no son válidas. La salida debe ser posterior a la llegada.');
+        return;
+      }
+
       const isCarOverlapping = carReservations.some(res => {
         if (res.carId !== carData.carId) return false;
         if (carData.linkedCarResId && res.id === carData.linkedCarResId) return false;
         const resStart = parseSafeDate(res.startDate);
         const resEnd = parseSafeDate(res.endDate);
-        return start < resEnd && end > resStart;
+        return cStart < resEnd && cEnd > resStart;
       });
       if (isCarOverlapping) {
         setError('El vehículo seleccionado ya está reservado en estas fechas.');
@@ -276,8 +293,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
             carId: carData.carId,
             clientName: formData.clientName,
             clientPhone: formData.clientPhone,
-            startDate: formData.startDate,
-            endDate: formData.endDate,
+            startDate: carData.isFullStay ? formData.startDate : carData.startDate,
+            endDate: carData.isFullStay ? formData.endDate : carData.endDate,
             totalCost: carData.carTotalCost,
             depositAmount: carData.carDepositAmount,
             status: 'confirmed',
@@ -299,8 +316,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
             carId: carData.carId,
             clientName: formData.clientName,
             clientPhone: formData.clientPhone,
-            startDate: formData.startDate,
-            endDate: formData.endDate,
+            startDate: carData.isFullStay ? formData.startDate : carData.startDate,
+            endDate: carData.isFullStay ? formData.endDate : carData.endDate,
             totalCost: carData.carTotalCost,
             depositAmount: carData.carDepositAmount,
             status: 'confirmed',
@@ -659,6 +676,58 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
                         ))}
                       </select>
                     </div>
+
+                    <div className="form-row" style={{ marginTop: '1rem' }}>
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Duración del Arriendo</label>
+                        <select 
+                          className="form-input"
+                          value={carData.isFullStay ? 'full' : 'specific'}
+                          onChange={e => {
+                            const isFull = e.target.value === 'full';
+                            setCarData(prev => ({ 
+                              ...prev, 
+                              isFullStay: isFull, 
+                              carTotalCost: 0,
+                              startDate: isFull ? '' : formData.startDate,
+                              endDate: isFull ? '' : formData.endDate
+                            }));
+                          }}
+                        >
+                          <option value="full">Estadía Completa de la Cabaña</option>
+                          <option value="specific">Fechas Específicas</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {!carData.isFullStay && (
+                      <div className="form-row" style={{ marginTop: '1rem' }}>
+                        <div className="form-group">
+                          <label className="form-label">Desde</label>
+                          <input 
+                            type="date" 
+                            className="form-input" 
+                            value={carData.startDate} 
+                            onChange={e => setCarData(prev => ({ ...prev, startDate: e.target.value, carTotalCost: 0 }))}
+                            min={formData.startDate}
+                            max={formData.endDate}
+                            required={!carData.isFullStay}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Hasta</label>
+                          <input 
+                            type="date" 
+                            className="form-input" 
+                            value={carData.endDate} 
+                            onChange={e => setCarData(prev => ({ ...prev, endDate: e.target.value, carTotalCost: 0 }))}
+                            min={formData.startDate}
+                            max={formData.endDate}
+                            required={!carData.isFullStay}
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="form-row" style={{ marginTop: '1rem' }}>
                       <div className="form-group">
