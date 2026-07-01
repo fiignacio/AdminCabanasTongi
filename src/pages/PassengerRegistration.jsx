@@ -22,6 +22,7 @@ export default function PassengerRegistration() {
   const [email, setEmail] = useState('');
   const [titular, setTitular] = useState(reservationData?.clientName || '');
   const [clientPhone, setClientPhone] = useState(reservationData?.clientPhone || '');
+  const [notes, setNotes] = useState(reservationData?.notes || '');
   const [passengers, setPassengers] = useState([]);
   
   const invoiceRef = useRef(null);
@@ -309,6 +310,17 @@ export default function PassengerRegistration() {
                 <label className="form-label"><Mail size={16} style={{ display: 'inline' }}/> Correo de Contacto</label>
                 <input type="email" className="form-input" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
               </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Notas Adicionales / Extras</label>
+                <textarea 
+                  className="form-input" 
+                  rows={3} 
+                  value={notes} 
+                  onChange={e => setNotes(e.target.value)} 
+                  placeholder="Detalles, peticiones especiales, servicios adicionales..." 
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
             </div>
           </div>
 
@@ -403,6 +415,15 @@ export default function PassengerRegistration() {
                     </div>
                   </div>
                 </div>
+
+                {notes && (
+                  <div className="invoice-section">
+                    <div className="invoice-section-title">NOTAS DE LA RESERVA / EXTRAS</div>
+                    <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '4px', fontSize: '0.95rem', color: '#333', whiteSpace: 'pre-wrap', borderLeft: '3px solid #D35400' }}>
+                      {notes}
+                    </div>
+                  </div>
+                )}
 
                 <div className="invoice-section">
                   <div className="invoice-section-title">LISTA DE PASAJEROS ({passengers.length})</div>

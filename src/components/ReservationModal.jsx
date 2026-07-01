@@ -36,7 +36,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     paymentMethod: '',
     clientPhone: '',
     referrerId: '',
-    referrerStatus: 'pending'
+    referrerStatus: 'pending',
+    notes: ''
   });
   
   const [error, setError] = useState('');
@@ -67,7 +68,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         paymentMethod: reservationToEdit.paymentMethod || '',
         clientPhone: reservationToEdit.clientPhone || '',
         referrerId: reservationToEdit.referrerId || '',
-        referrerStatus: reservationToEdit.referrerStatus || 'pending'
+        referrerStatus: reservationToEdit.referrerStatus || 'pending',
+        notes: reservationToEdit.notes || ''
       });
       setTotalCost(reservationToEdit.totalCost);
       setLastCalculatedCost(reservationToEdit.totalCost);
@@ -88,7 +90,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         paymentMethod: '',
         clientPhone: '',
         referrerId: '',
-        referrerStatus: 'pending'
+        referrerStatus: 'pending',
+        notes: ''
       });
       setTotalCost(0);
       setLastCalculatedCost(0);
@@ -109,7 +112,8 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         paymentMethod: '',
         clientPhone: '',
         referrerId: '',
-        referrerStatus: 'pending'
+        referrerStatus: 'pending',
+        notes: ''
       });
     }
   }, [reservationToEdit, initialData, cabins, isOpen]);
@@ -566,6 +570,18 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
                     </label>
                   </div>
                 </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
+                <label className="form-label" style={{ fontSize: '1.1rem' }}>Notas de la Reserva</label>
+                <textarea 
+                  className="form-input" 
+                  name="notes"
+                  rows={3}
+                  value={formData.notes} 
+                  onChange={handleChange} 
+                  placeholder="Detalles adicionales, extras, peticiones del pasajero..."
+                />
               </div>
 
               <div className="form-group" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
