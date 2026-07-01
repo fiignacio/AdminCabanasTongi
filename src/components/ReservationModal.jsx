@@ -217,8 +217,11 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
     if (!formData.isBlock) {
       const totalGuests = Number(formData.adults) + Number(formData.childrenCount);
       if (totalGuests > cabin.maxCapacity) {
-        setError(`La capacidad máxima de esta cabaña es de ${cabin.maxCapacity} personas (sin contar bebés).`);
-        return;
+        const confirmBypass = window.confirm(`La capacidad recomendada de esta cabaña es de ${cabin.maxCapacity} personas (sin contar bebés). Has ingresado ${totalGuests} personas. ¿Están los pasajeros de acuerdo en acomodarse excediendo la capacidad?`);
+        if (!confirmBypass) {
+          setError(`La capacidad sugerida es de ${cabin.maxCapacity} personas.`);
+          return;
+        }
       }
     }
 
