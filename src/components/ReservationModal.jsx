@@ -7,7 +7,7 @@ import { parseSafeDate } from '../utils/dateUtils';
 import './ReservationModal.css';
 
 const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) => {
-  const { cabins, prices, addReservation, updateReservation, reservations, referrers, addReferrer, cars, carReservations, addCarReservation, updateCarReservation, deleteCarReservation } = useStore();
+  const { cabins, prices, addReservation, updateReservation, reservations, cars, carReservations, addCarReservation, updateCarReservation, deleteCarReservation } = useStore();
   const navigate = useNavigate();
   
   const [carData, setCarData] = useState({
@@ -67,8 +67,6 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         depositAmount: reservationToEdit.depositAmount || 0,
         paymentMethod: reservationToEdit.paymentMethod || '',
         clientPhone: reservationToEdit.clientPhone || '',
-        referrerId: reservationToEdit.referrerId || '',
-        referrerStatus: reservationToEdit.referrerStatus || 'pending',
         notes: reservationToEdit.notes || ''
       });
       setTotalCost(reservationToEdit.totalCost);
@@ -89,8 +87,6 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
         depositAmount: 0,
         paymentMethod: '',
         clientPhone: '',
-        referrerId: '',
-        referrerStatus: 'pending',
         notes: ''
       });
       setTotalCost(0);
@@ -195,14 +191,6 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
   }, [formData.startDate, formData.endDate]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null;
-
-  const handleCreateReferrer = () => {
-    const name = window.prompt('Nombre del nuevo referente o agencia:');
-    if (name && name.trim()) {
-      const newId = addReferrer({ name: name.trim(), createdAt: new Date().toISOString() });
-      setFormData(prev => ({ ...prev, referrerId: newId }));
-    }
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -478,34 +466,6 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
           )}
 
           {!formData.isBlock && (
-            <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <label className="form-label">Referido por (Agencia/Tercero)</label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <select 
-                  name="referrerId" 
-                  className="form-input" 
-                  value={formData.referrerId || ''} 
-                  onChange={handleChange} 
-                  style={{ flex: 1 }}
-                >
-                  <option value="">Sin referente (Directo)</option>
-                  {referrers?.map(ref => (
-                    <option key={ref.id} value={ref.id}>{ref.name}</option>
-                  ))}
-                </select>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={handleCreateReferrer}
-                  style={{ padding: '0.5rem 1rem' }}
-                >
-                  + Nuevo
-                </button>
-              </div>
-            </div>
-          )}
-
-          {!formData.isBlock && (
             <>
               <div className="form-row guests-row">
                 <div className="form-group">
@@ -608,9 +568,12 @@ const ReservationModal = ({ isOpen, onClose, reservationToEdit, initialData }) =
                     <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.5rem' }}>
                       Cálculo automático: <strong>{n} noches</strong> x {Number(formData.adults)+Number(formData.childrenCount)} pers. = <strong>${lastCalculatedCost.toLocaleString('es-CL')}</strong>
                       {isCustom && (
-                        <button type="button" onClick={() => setTotalCost(lastCalculatedCost)} className="btn btn-sm btn-secondary" style={{ padding: '2px 8px', marginLeft: '10px', fontSize: '0.75rem' }}>
-                          Usar sugerido
-                        </button>
+                        <div style={{ marginTop: '4px', color: 'var(--success)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>🏷️ Tarifa manual / descuento activo</span>
+                          <button type="button" onClick={() => setTotalCost(lastCalculatedCost)} className="btn btn-sm btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>
+                            Restaurar precio de lista
+                          </button>
+                        </div>
                       )}
                     </small>
                   );

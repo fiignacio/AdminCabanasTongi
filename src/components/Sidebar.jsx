@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut, WifiOff, CloudOff, Network } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Compass, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut, WifiOff, CloudOff } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { FEATURES } from '../config/features';
 import './Sidebar.css';
 
 const Sidebar = ({ onClose }) => {
-  const { logout, offlineQueue } = useStore();
+  const { logout, offlineQueue, businessConfig } = useStore();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -24,25 +25,28 @@ const Sidebar = ({ onClose }) => {
     if (onClose) onClose();
   };
 
-  const menuItems = [
-    { path: '/admin/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { path: '/admin/calendar', name: 'Cal. Cabañas', icon: <CalendarDays size={20} /> },
-    { path: '/admin/cars-calendar', name: 'Cal. Vehículos', icon: <Car size={20} /> },
-    { path: '/admin/reservations', name: 'Reservas', icon: <BookOpen size={20} /> },
-    { path: '/admin/reports', name: 'Reportes', icon: <BarChart3 size={20} /> },
-    { path: '/admin/tools/quote', name: 'Cotizador', icon: <Calculator size={20} /> },
-    { path: '/admin/referrers', name: 'Referentes', icon: <Network size={20} /> },
-    { path: '/admin/tools/passengers', name: 'Pasajeros', icon: <Users size={20} /> },
-    { path: '/admin/sync', name: 'Sincronización', icon: <RefreshCw size={20} /> },
-    { path: '/admin/cars-settings', name: 'Flota Vehículos', icon: <Settings size={20} /> },
-    { path: '/admin/settings', name: 'Conf. Cabañas', icon: <Settings size={20} /> },
+  const allMenuItems = [
+    { path: '/admin/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} />, enabled: true },
+    { path: '/admin/calendar', name: 'Cal. Cabañas', icon: <CalendarDays size={20} />, enabled: true },
+    { path: '/admin/cars-calendar', name: 'Cal. Vehículos', icon: <Car size={20} />, enabled: true },
+    { path: '/admin/tours-calendar', name: 'Cal. Tours', icon: <Compass size={20} />, enabled: true },
+    { path: '/admin/reservations', name: 'Reservas', icon: <BookOpen size={20} />, enabled: true },
+    { path: '/admin/reports', name: 'Reportes', icon: <BarChart3 size={20} />, enabled: true },
+    { path: '/admin/tools/quote', name: 'Cotizador', icon: <Calculator size={20} />, enabled: FEATURES.showQuote },
+    { path: '/admin/tools/passengers', name: 'Pasajeros', icon: <Users size={20} />, enabled: FEATURES.showPassengers },
+    { path: '/admin/sync', name: 'Sincronización', icon: <RefreshCw size={20} />, enabled: true },
+    { path: '/admin/cars-settings', name: 'Flota Vehículos', icon: <Settings size={20} />, enabled: true },
+    { path: '/admin/tours-settings', name: 'Conf. Tours', icon: <Settings size={20} />, enabled: true },
+    { path: '/admin/settings', name: 'Conf. Cabañas', icon: <Settings size={20} />, enabled: true },
   ];
+
+  const menuItems = allMenuItems.filter(item => item.enabled);
 
   return (
     <aside className="sidebar glass-panel">
       <div className="sidebar-header">
-        <Tent className="logo-icon" size={28} />
-        <h2>Cabañas Manuara</h2>
+        <Tent className="logo-icon" size={28} style={{ color: businessConfig?.primaryColor || 'var(--accent-primary)' }} />
+        <h2 style={{ fontSize: '1.1rem', wordBreak: 'break-word' }}>{businessConfig?.businessName || 'Mi Complejo'}</h2>
       </div>
       
       {!isOnline && (
@@ -71,25 +75,7 @@ const Sidebar = ({ onClose }) => {
           ))}
         </div>
         
-        <div className="sidebar-footer" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
-          <NavLink 
-            to="/" 
-            className="nav-item"
-            style={{ color: 'var(--accent-secondary)' }}
-            onClick={onClose}
-          >
-            <Tent size={20} />
-            <span>Ver Vista Pública</span>
-          </NavLink>
-          <button 
-            onClick={handleLogout}
-            className="nav-item"
-            style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', marginTop: '0.5rem' }}
-          >
-            <LogOut size={20} />
-            <span>Cerrar Sesión</span>
-          </button>
-        </div>
+        
       </nav>
     </aside>
   );

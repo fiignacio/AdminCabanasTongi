@@ -23,26 +23,26 @@ export const generateWhatsAppLink = (phone, message) => {
   return `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
 };
 
-export const generateCabinMessage = (res, cabinName, template = 'confirmation') => {
+export const generateCabinMessage = (res, cabinName, template = 'confirmation', businessName = 'nuestro complejo') => {
   const deposit = res.depositAmount || 0;
   const total = res.totalCost || 0;
   const balance = total - deposit;
   const client = res.clientName || 'Estimado/a';
   
   if (template === 'checkin') {
-    return `¡Hola *${client}*! 👋\nTe escribimos de Cabañas Manuara.\n\nTe recordamos que tu fecha de llegada (Check-in) es el *${res.startDate}* en la *${cabinName}*.\n📍 *Nuestra ubicación:* https://maps.google.com/?q=-27.15,-109.43\n\n¿A qué hora estimas tu llegada para estar atentos?\n¡Nos vemos pronto!`;
+    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName}.\n\nTe recordamos que tu fecha de llegada (Check-in) es el *${res.startDate}* en la *${cabinName}*.\n\n¿A qué hora estimas tu llegada para estar atentos?\n¡Nos vemos pronto!`;
   }
   
   if (template === 'checkout') {
-    return `¡Hola *${client}*! 👋\nEsperamos que hayas disfrutado mucho tu estadía en Cabañas Manuara.\n\nTe recordamos que el horario de salida (Check-out) de la *${cabinName}* es mañana a las 11:00 AM.\n¡Gracias por preferirnos! Si tienes un minuto, nos ayudaría mucho una reseña en Google o TripAdvisor. ⭐⭐⭐⭐⭐`;
+    return `¡Hola *${client}*! 👋\nEsperamos que hayas disfrutado mucho tu estadía en ${businessName}.\n\nTe recordamos que el horario de salida (Check-out) de la *${cabinName}* es mañana a las 11:00 AM.\n¡Gracias por preferirnos! ⭐⭐⭐⭐⭐`;
   }
   
   if (template === 'payment') {
-    return `¡Hola *${client}*! 👋\nTe escribimos de Cabañas Manuara para recordarte que tienes un saldo pendiente por tu reserva en la *${cabinName}*.\n\n💰 *Saldo a pagar:* $${balance.toLocaleString('es-CL')}\n\nPor favor, envíanos el comprobante cuando puedas realizar la transferencia. ¡Muchas gracias!`;
+    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para recordarte que tienes un saldo pendiente por tu reserva en la *${cabinName}*.\n\n💰 *Saldo a pagar:* $${balance.toLocaleString('es-CL')}\n\nPor favor, envíanos el comprobante cuando puedas realizar la transferencia. ¡Muchas gracias!`;
   }
   
   // Default: confirmation
-  let msg = `¡Hola *${client}*! 👋\nTe escribimos de Cabañas Manuara para enviarte los detalles de tu reserva en la *${cabinName}*.\n\n`;
+  let msg = `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para enviarte los detalles de tu reserva en la *${cabinName}*.\n\n`;
   msg += `📅 *Fecha:* ${res.startDate} al ${res.endDate}\n`;
   msg += `💰 *Total:* $${total.toLocaleString('es-CL')}\n`;
   if (deposit > 0) {
@@ -55,22 +55,22 @@ export const generateCabinMessage = (res, cabinName, template = 'confirmation') 
   return msg;
 };
 
-export const generateCarMessage = (res, carName, template = 'confirmation') => {
+export const generateCarMessage = (res, carName, template = 'confirmation', businessName = 'nuestra administración') => {
   const deposit = res.depositAmount || 0;
   const total = res.totalCost || 0;
   const balance = total - deposit;
   const client = res.clientName || 'Estimado/a';
 
   if (template === 'checkin') {
-    return `¡Hola *${client}*! 👋\nTe escribimos para coordinar la entrega de tu vehículo arrendado (*${carName}*).\n\nTu fecha de retiro es el *${res.startDate}*.\nPor favor confírmanos la hora exacta a la que pasarás a retirarlo o si necesitas que te lo llevemos al aeropuerto.\n¡Gracias!`;
+    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para coordinar la entrega de tu vehículo arrendado (*${carName}*).\n\nTu fecha de retiro es el *${res.startDate}*.\nPor favor confírmanos la hora exacta a la que pasarás a retirarlo.\n¡Gracias!`;
   }
 
   if (template === 'payment') {
-    return `¡Hola *${client}*! 👋\nTe escribimos para recordarte que tienes un saldo pendiente por el arriendo del vehículo *${carName}*.\n\n💰 *Saldo a pagar:* $${balance.toLocaleString('es-CL')}\n\nQuedamos atentos al comprobante de transferencia. ¡Saludos!`;
+    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para recordarte que tienes un saldo pendiente por el arriendo del vehículo *${carName}*.\n\n💰 *Saldo a pagar:* $${balance.toLocaleString('es-CL')}\n\nQuedamos atentos al comprobante de transferencia. ¡Saludos!`;
   }
 
   // Default: confirmation
-  let msg = `¡Hola *${client}*! 👋\nTe escribimos para confirmar tu arriendo del vehículo *${carName}*.\n\n`;
+  let msg = `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para confirmar tu arriendo del vehículo *${carName}*.\n\n`;
   msg += `📅 *Fechas:* Retiro el ${res.startDate} - Devolución el ${res.endDate}\n`;
   msg += `💰 *Total:* $${total.toLocaleString('es-CL')}\n`;
   if (deposit > 0) {
@@ -83,8 +83,8 @@ export const generateCarMessage = (res, carName, template = 'confirmation') => {
   return msg;
 };
 
-export const generateQuoteMessage = (titular, pdfUrl = '') => {
-  let msg = `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe envío la cotización formal de tu estadía en Cabañas Manuara, incluyendo el desglose detallado de huéspedes y extras.\n\n`;
+export const generateQuoteMessage = (titular, pdfUrl = '', businessName = 'nuestra administración') => {
+  let msg = `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe envío la cotización formal de tu estadía en ${businessName}, incluyendo el desglose detallado de huéspedes y extras.\n\n`;
   if (pdfUrl) {
     msg += `📄 *Ver y descargar Cotización:* ${pdfUrl}\n\n`;
   }
@@ -92,8 +92,8 @@ export const generateQuoteMessage = (titular, pdfUrl = '') => {
   return msg;
 };
 
-export const generateInvitationMessage = (titular, pdfUrl = '') => {
-  let msg = `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe envío la Carta de Invitación y el Registro de Pasajeros para tu estadía en Cabañas Manuara.\n\n`;
+export const generateInvitationMessage = (titular, pdfUrl = '', businessName = 'nuestra administración') => {
+  let msg = `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe envío la Carta de Invitación y el Registro de Pasajeros para tu estadía en ${businessName}.\n\n`;
   if (pdfUrl) {
     msg += `📄 *Ver y descargar Carta de Invitación:* ${pdfUrl}\n\n`;
   }

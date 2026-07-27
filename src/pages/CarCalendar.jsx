@@ -24,6 +24,7 @@ const CarCalendar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [waModalOpen, setWaModalOpen] = useState(false);
   const [waReservation, setWaReservation] = useState(null);
+  const [calculatedCost, setCalculatedCost] = useState(0);
   
   const [isTextCollapsed, setIsTextCollapsed] = useState(window.innerWidth < 768);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
@@ -132,7 +133,7 @@ const CarCalendar = () => {
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [dragCreate]);
 
-  // Auto-calcular costo
+  // Auto-calcular costo preservando precio manual si fue modificado
   useEffect(() => {
     if (!resForm.carId || !resForm.startDate || !resForm.endDate) return;
     
@@ -152,7 +153,11 @@ const CarCalendar = () => {
       rate = car.promoDailyRate;
     }
     
-    setResForm(prev => ({ ...prev, totalCost: rate * days }));
+    const suggested = rate * days;
+    if (resForm.totalCost === 0 || resForm.totalCost === calculatedCost) {
+      setResForm(prev => ({ ...prev, totalCost: suggested }));
+    }
+    setCalculatedCost(suggested);
   }, [resForm.carId, resForm.startDate, resForm.endDate, cars]);
 
   const getReservationsForDay = (carId, day) => {
@@ -560,10 +565,19 @@ const CarCalendar = () => {
                   const c = cars.find(car => car.id === resForm.carId);
                   if (!c) return null;
                   const isPromo = c.promoThresholdDays > 0 && d >= c.promoThresholdDays;
+                  const isCustom = resForm.totalCost !== calculatedCost && calculatedCost > 0;
                   return (
-                    <small style={{ color: isPromo ? 'var(--success)' : 'var(--text-secondary)', display: 'block', marginTop: '0.25rem' }}>
-                      Cálculo automático: {d} días x ${isPromo ? c.promoDailyRate.toLocaleString('es-CL') : c.dailyRate.toLocaleString('es-CL')}
+                    <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.35rem' }}>
+                      Cálculo de lista: {d} días x ${isPromo ? c.promoDailyRate.toLocaleString('es-CL') : c.dailyRate.toLocaleString('es-CL')} = ${calculatedCost.toLocaleString('es-CL')}
                       {isPromo && ' (Tarifa Promo)'}
+                      {isCustom && (
+                        <div style={{ marginTop: '4px', color: 'var(--success)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>🏷️ Tarifa manual / descuento activo</span>
+                          <button type="button" onClick={() => setResForm({...resForm, totalCost: calculatedCost})} className="btn btn-sm btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>
+                            Usar tarifa de lista
+                          </button>
+                        </div>
+                      )}
                     </small>
                   );
                 })()}

@@ -15,6 +15,22 @@ export const getSupabase = (config) => {
 export const useStore = create(
   persist(
     (set, get) => ({
+      // BUSINESS CONFIG & PERSONALIZATION
+      businessConfig: {
+        businessName: 'Mi Complejo de Cabañas',
+        administratorName: 'Administrador Principal',
+        primaryColor: '#2c4c3b',
+        contactPhone: '',
+        contactEmail: '',
+        isSetupCompleted: false
+      },
+      updateBusinessConfig: (newConfig) => set((state) => ({
+        businessConfig: { ...state.businessConfig, ...newConfig }
+      })),
+      resetSetup: () => set((state) => ({
+        businessConfig: { ...state.businessConfig, isSetupCompleted: false }
+      })),
+
       prices: {
         highSeasonAdult: 35000,
         lowSeasonAdult: 30000,
@@ -43,7 +59,9 @@ export const useStore = create(
       },
       handleMutationResponse: (error, actionType, table, payload, originalId) => {
         if (error) {
-          if (error.message && error.message.includes('Failed to fetch')) {
+          const msg = error.message || '';
+          if (msg.includes('Failed to fetch') || msg.includes('Could not find the table') || error.code === '42P01' || error.code === 'PGRST205') {
+            console.warn(`[Supabase Sync] Tabla '${table}' pendiente de creación en Supabase o sin conexión. Guardando localmente.`);
             get().addToOfflineQueue(actionType, table, payload, originalId);
           } else {
             console.error(error);
@@ -95,10 +113,10 @@ export const useStore = create(
       },
 
       cabins: [
-        { id: '1', name: 'Cabaña Grande', type: 'large', maxCapacity: 6, ownerId: 'owner1', ownerName: 'Dueño 1', color: '#D35400' },
-        { id: '2', name: 'Cabaña Pequeña', type: 'small', maxCapacity: 3, ownerId: 'owner1', ownerName: 'Dueño 1', color: '#556B2F' },
-        { id: '3', name: 'Cabaña Mediana 1', type: 'medium', maxCapacity: 4, ownerId: 'owner2', ownerName: 'Dueño 2', color: '#B8860B' },
-        { id: '4', name: 'Cabaña Mediana 2', type: 'medium', maxCapacity: 4, ownerId: 'owner2', ownerName: 'Dueño 2', color: '#CD853F' }
+        { id: '1', name: 'Cabaña Grande', type: 'large', maxCapacity: 6, color: '#D35400' },
+        { id: '2', name: 'Cabaña Pequeña', type: 'small', maxCapacity: 3, color: '#556B2F' },
+        { id: '3', name: 'Cabaña Mediana 1', type: 'medium', maxCapacity: 4, color: '#B8860B' },
+        { id: '4', name: 'Cabaña Mediana 2', type: 'medium', maxCapacity: 4, color: '#CD853F' }
       ],
       addCabin: (cabin) => {
         const newCabin = { ...cabin, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
@@ -212,6 +230,66 @@ export const useStore = create(
           .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'car_reservations', null, id))
           .catch(e => get().handleMutationResponse(e, 'DELETE', 'car_reservations', null, id));
       },
+      // TOURS
+      tours: [
+        { id: 't1', name: 'Tour Rapa Nui Completo', description: 'Recorrido histórico y cultural por los sitios sagrados', price: 65000, duration: '1 Día completo', maxCapacity: 12, color: '#8e44ad', isActive: true },
+        { id: 't2', name: 'Tour Snorkel & Submarino', description: 'Exploración marina y arrecifes de coral en aguas cristalinas', price: 45000, duration: '3 Horas', maxCapacity: 8, color: '#16a085', isActive: true },
+        { id: 't3', name: 'Tour Trekking Atardecer', description: 'Caminata guiada al volcán y mirador panorámico', price: 35000, duration: '4 Horas', maxCapacity: 15, color: '#e67e22', isActive: true }
+      ],
+      addTour: (tour) => {
+        const newTour = { ...tour, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
+        set((state) => ({ tours: [...state.tours, newTour] }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('tours').insert([newTour])
+          .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'tours', newTour))
+          .catch(e => get().handleMutationResponse(e, 'INSERT', 'tours', newTour));
+      },
+      updateTour: (id, updatedData) => {
+        set((state) => ({ tours: state.tours.map(t => t.id === id ? { ...t, ...updatedData } : t) }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('tours').update(updatedData).eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'UPDATE', 'tours', updatedData, id))
+          .catch(e => get().handleMutationResponse(e, 'UPDATE', 'tours', updatedData, id));
+      },
+      deleteTour: (id) => {
+        set((state) => ({ tours: state.tours.filter(t => t.id !== id) }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('tours').delete().eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'tours', null, id))
+          .catch(e => get().handleMutationResponse(e, 'DELETE', 'tours', null, id));
+      },
+
+      // TOUR RESERVATIONS
+      tourReservations: [],
+      addTourReservation: (res) => {
+        const newRes = { ...res, id: Date.now().toString() + Math.random().toString(36).substr(2, 5) };
+        set((state) => ({ tourReservations: [...state.tourReservations, newRes] }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('tour_reservations').insert([newRes])
+          .then(({error}) => get().handleMutationResponse(error, 'INSERT', 'tour_reservations', newRes))
+          .catch(e => get().handleMutationResponse(e, 'INSERT', 'tour_reservations', newRes));
+      },
+      updateTourReservation: (id, updatedData) => {
+        set((state) => ({ tourReservations: state.tourReservations.map(r => r.id === id ? { ...r, ...updatedData } : r) }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('tour_reservations').update(updatedData).eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'UPDATE', 'tour_reservations', updatedData, id))
+          .catch(e => get().handleMutationResponse(e, 'UPDATE', 'tour_reservations', updatedData, id));
+      },
+      deleteTourReservation: (id) => {
+        set((state) => ({ tourReservations: state.tourReservations.filter(r => r.id !== id) }));
+        
+        const sb = getSupabase(get().syncConfig);
+        if (sb) sb.from('tour_reservations').delete().eq('id', id)
+          .then(({error}) => get().handleMutationResponse(error, 'DELETE', 'tour_reservations', null, id))
+          .catch(e => get().handleMutationResponse(e, 'DELETE', 'tour_reservations', null, id));
+      },
+
       // REFERRERS (Agencias/Clientes)
       referrers: [],
       addReferrer: (referrer) => {
@@ -338,6 +416,20 @@ export const useStore = create(
           set({ carReservations: carResData });
         }
 
+        // Fetch Tours
+        const { data: toursData, error: toursError } = await sb.from('tours').select('*');
+        if (toursError) console.error("Error tours:", toursError);
+        else if (toursData) {
+          set({ tours: toursData });
+        }
+
+        // Fetch Tour Reservations
+        const { data: tourResData, error: tourResError } = await sb.from('tour_reservations').select('*');
+        if (tourResError) console.error("Error tour reservations:", tourResError);
+        else if (tourResData) {
+          set({ tourReservations: tourResData });
+        }
+
         // Fetch Referrers
         const { data: refData, error: refError } = await sb.from('referrers').select('*');
         if (refError) console.error("Error referrers:", refError);
@@ -379,8 +471,9 @@ export const useStore = create(
           .on('postgres_changes', { event: '*', schema: 'public', table: 'cabins' }, handleRealtimeEvent('cabins', 'cabins'))
           .on('postgres_changes', { event: '*', schema: 'public', table: 'cars' }, handleRealtimeEvent('cars', 'cars'))
           .on('postgres_changes', { event: '*', schema: 'public', table: 'car_reservations' }, handleRealtimeEvent('car_reservations', 'carReservations'))
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'referrers' }, handleRealtimeEvent('referrers', 'referrers'))
-          .subscribe((status) => {
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tours' }, handleRealtimeEvent('tours', 'tours'))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tour_reservations' }, handleRealtimeEvent('tour_reservations', 'tourReservations'))
+                    .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
               console.log('✅ Conectado a Supabase Realtime');
             }

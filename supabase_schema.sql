@@ -1,5 +1,4 @@
 -- Borrar tablas si ya existen
-DROP TABLE IF EXISTS public.referrers;
 DROP TABLE IF EXISTS public.car_reservations;
 DROP TABLE IF EXISTS public.reservations;
 DROP TABLE IF EXISTS public.cars;
@@ -11,8 +10,6 @@ CREATE TABLE public.cabins (
     name text NOT NULL,
     type text NOT NULL,
     "maxCapacity" integer NOT NULL,
-    "ownerId" text NOT NULL,
-    "ownerName" text NOT NULL,
     color text NOT NULL
 );
 
@@ -31,17 +28,6 @@ CREATE TABLE public.reservations (
     "isBlock" boolean,
     "totalCost" numeric,
     status text NOT NULL,
-    "referrerId" text,
-    "referrerStatus" text DEFAULT 'pending'
-);
-
--- Crear tabla de Referentes (Agencias/Terceros)
-CREATE TABLE public.referrers (
-    id text PRIMARY KEY,
-    name text NOT NULL,
-    phone text,
-    email text,
-    "createdAt" text NOT NULL
 );
 
 -- Crear tabla de vehículos (Arriendos)
@@ -74,13 +60,11 @@ ALTER TABLE public.cabins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cars ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.car_reservations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.referrers ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Permitir todo acceso anónimo cabañas" ON public.cabins FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo acceso anónimo reservas" ON public.reservations FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo acceso anónimo vehiculos" ON public.cars FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo acceso anónimo reservas_vehiculos" ON public.car_reservations FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir todo acceso anónimo referentes" ON public.referrers FOR ALL USING (true) WITH CHECK (true);
 
 -- Agregar columnas nuevas para Abonos (Update)
 ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS "depositAmount" numeric;
