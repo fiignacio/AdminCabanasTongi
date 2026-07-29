@@ -12,7 +12,7 @@ import {
   isSameDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Calendar, Compass, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Calendar, Compass, Users, Edit2, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import WhatsAppModal from '../components/WhatsAppModal';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
@@ -25,6 +25,7 @@ const TourCalendar = () => {
   const [waModalOpen, setWaModalOpen] = useState(false);
   const [waReservation, setWaReservation] = useState(null);
   const [calculatedCost, setCalculatedCost] = useState(0);
+  const [editingId, setEditingId] = useState(null);
   
   const [isTextCollapsed, setIsTextCollapsed] = useState(window.innerWidth < 768);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
@@ -355,7 +356,7 @@ const TourCalendar = () => {
         <div className="modal-overlay">
           <div className="modal-content glass-panel" style={{ maxWidth: '500px' }}>
             <div className="modal-header">
-              <h2>Agendar Tour</h2>
+              <h2>{editingId ? 'Editar Reserva de Tour' : 'Agendar Tour'}</h2>
               <button className="btn-icon" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
             </div>
             <form onSubmit={handleResSubmit}>
