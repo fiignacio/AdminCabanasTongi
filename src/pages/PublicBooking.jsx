@@ -9,7 +9,7 @@ import './PublicBooking.css';
 
 const PublicBooking = () => {
   const navigate = useNavigate();
-  const { cabins, reservations, prices } = useStore();
+  const { cars, tours } = useStore();
   
   const [startDate, setStartDate] = useState(formatSafeDate(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(formatSafeDate(addDays(new Date(), 3), 'yyyy-MM-dd'));
@@ -30,7 +30,7 @@ const PublicBooking = () => {
 
     const totalGuests = adults + children;
     
-    const results = cabins.map(cabin => {
+    const results = cars.map(cabin => {
       // Filtrar por capacidad
       if (cabin.maxCapacity < totalGuests) {
         return { cabin, available: false, reason: 'Capacidad excedida' };
@@ -166,7 +166,7 @@ const PublicBooking = () => {
               Resultados del {formatSafeDate(startDate, "d 'de' MMMM")} al {formatSafeDate(endDate, "d 'de' MMMM")}
             </h3>
             
-            <div className="cabins-grid">
+            <div className="cars-grid">
               {searchResults.map((result, idx) => (
                 <div key={idx} className={`cabin-card glass-panel ${result.availableCount === 0 ? 'unavailable' : ''}`}>
                   <div className="cabin-img-placeholder">

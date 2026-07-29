@@ -24,7 +24,7 @@ export default function OnboardingModal() {
   const [primaryColor, setPrimaryColor] = useState(businessConfig.primaryColor || '#2c4c3b');
 
   // Local cabins state for fast editing during onboarding
-  const [localCabins, setLocalCabins] = useState(cabins.length > 0 ? cabins : [
+  const [localCabins, setLocalCabins] = useState([
     { id: '1', name: 'Cabaña Grande', maxCapacity: 6, color: '#D35400' },
     { id: '2', name: 'Cabaña Pequeña', maxCapacity: 3, color: '#556B2F' },
     { id: '3', name: 'Cabaña Mediana 1', maxCapacity: 4, color: '#B8860B' }

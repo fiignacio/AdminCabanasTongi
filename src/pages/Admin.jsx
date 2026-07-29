@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Settings, Save, Plus, Edit2, Trash2, X, Building2, Palette, Sparkles, RefreshCw } from 'lucide-react';
+import { Settings, Save, Building2, Palette, Sparkles, RefreshCw } from 'lucide-react';
 import './Admin.css';
 
 const THEME_PRESETS = [
@@ -37,19 +37,7 @@ const Admin = () => {
   });
   const [priceSaved, setPriceSaved] = useState(false);
 
-  // Cabin Form State
-  const [editingCabin, setEditingCabin] = useState(null);
-  const [isCabinModalOpen, setIsCabinModalOpen] = useState(false);
-  const [cabinForm, setCabinForm] = useState({
-    name: '', type: 'large', maxCapacity: 4, color: '#2980b9'
-  });
 
-  const handleBrandSubmit = (e) => {
-    e.preventDefault();
-    updateBusinessConfig(brandForm);
-    setBrandSaved(true);
-    setTimeout(() => setBrandSaved(false), 3000);
-  };
 
   const handlePriceChange = (e) => {
     setPricesForm({ ...pricesForm, [e.target.name]: Number(e.target.value) });
@@ -213,81 +201,7 @@ const Admin = () => {
           </form>
         </div>
 
-        {/* 3. Gestión de Cabañas */}
-        <div className="card glass-panel admin-section" style={{ gridColumn: '1 / -1' }}>
-          <div className="section-header-row">
-            <h2>Catálogo y Colores de Cabañas</h2>
-            <button className="btn btn-primary btn-sm" onClick={openNewCabin}>
-              <Plus size={18} /> Nueva Cabaña
-            </button>
-          </div>
-          
-          <div className="table-container">
-            <table className="reservations-table">
-              <thead>
-                <tr>
-                  <th>Nombre de Cabaña</th>
-                  <th>Capacidad Máxima</th>
-                  <th>Color en Calendario</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cabins.map(cabin => (
-                  <tr key={cabin.id}>
-                    <td><strong>{cabin.name}</strong></td>
-                    <td>{cabin.maxCapacity} personas</td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: 22, height: 22, borderRadius: '50%', backgroundColor: cabin.color || '#2980b9' }}></div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{cabin.color || '#2980b9'}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="actions">
-                        <button className="btn-icon" onClick={() => openEditCabin(cabin)} title="Editar cabaña y color"><Edit2 size={18} /></button>
-                        <button className="btn-icon danger" onClick={() => handleDeleteCabin(cabin.id)} title="Eliminar cabaña"><Trash2 size={18} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
-
-      {/* Cabin Modal */}
-      {isCabinModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel">
-            <div className="modal-header">
-              <h2>{editingCabin ? 'Editar Cabaña' : 'Nueva Cabaña'}</h2>
-              <button className="btn-icon" onClick={() => setIsCabinModalOpen(false)}><X size={24} /></button>
-            </div>
-            <form onSubmit={handleCabinSubmit}>
-              <div className="form-group">
-                <label className="form-label">Nombre de la Cabaña</label>
-                <input type="text" className="form-input" value={cabinForm.name} onChange={e => setCabinForm({...cabinForm, name: e.target.value})} required placeholder="Ej: Cabaña Don Pedro" />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Capacidad Max. (Personas)</label>
-                  <input type="number" min="1" className="form-input" value={cabinForm.maxCapacity} onChange={e => setCabinForm({...cabinForm, maxCapacity: Number(e.target.value)})} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Color Distintivo (Calendario)</label>
-                  <input type="color" className="form-input" style={{ padding: '0 5px', height: '40px', cursor: 'pointer' }} value={cabinForm.color} onChange={e => setCabinForm({...cabinForm, color: e.target.value})} required />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setIsCabinModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-primary">Guardar Cabaña</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
