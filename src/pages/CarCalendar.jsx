@@ -12,7 +12,7 @@ import {
   isSameDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Edit2, Trash2, Calendar } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import WhatsAppModal from '../components/WhatsAppModal';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
@@ -28,6 +28,7 @@ const CarCalendar = () => {
   
   const [isTextCollapsed, setIsTextCollapsed] = useState(window.innerWidth < 768);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
+  const [editingId, setEditingId] = useState(null);
 
   const { cars, carReservations, addCarReservation, updateCarReservation } = useStore();
   
@@ -446,6 +447,12 @@ const CarCalendar = () => {
                           style={customStyle}
                           draggable={true}
                           onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingId(res.id);
+                            setResForm(res);
+                            setIsModalOpen(true);
+                          }}
                           onDragStart={(e) => handleDragStart(e, res.id)}
                           onMouseEnter={(e) => {
                             if (dragCreate.active) return;
