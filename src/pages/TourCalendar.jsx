@@ -12,7 +12,7 @@ import {
   isSameDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Calendar, Compass, Users, Trash2, Edit2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Calendar, Compass, Users, Trash2, Edit2, List, Search, Filter } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import WhatsAppModal from '../components/WhatsAppModal';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
@@ -26,6 +26,9 @@ const TourCalendar = () => {
   const [waReservation, setWaReservation] = useState(null);
   const [calculatedCost, setCalculatedCost] = useState(0);
   const [editingId, setEditingId] = useState(null);
+  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' | 'table'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTourFilter, setSelectedTourFilter] = useState('');
   
   const [isTextCollapsed, setIsTextCollapsed] = useState(window.innerWidth < 768);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
@@ -196,106 +199,263 @@ const TourCalendar = () => {
         </div>
       </div>
 
-      <div 
-        className="calendar-grid-wrapper"
-        ref={gridRef}
-        onMouseDown={handleWrapperMouseDown}
-        onMouseMove={handleWrapperMouseMove}
-        onMouseUp={handleWrapperMouseUpOrLeave}
-        onMouseLeave={handleWrapperMouseUpOrLeave}
-        style={{ cursor: isPanning ? 'grabbing' : 'auto' }}
-      >
-        <div className="calendar-grid">
-          {/* Header Row */}
-          <div className="calendar-row header-row">
-            <div className={`calendar-cell cabin-name-header ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-              {isSidebarCollapsed ? 'Tour' : 'Tour / Excursión'}
-            </div>
-            {daysInMonth.map(day => {
-              const isToday = isSameDay(day, new Date());
-              return (
-              <div key={day.toISOString()} id={`tour-day-header-${format(day, 'yyyy-MM-dd')}`} className={`calendar-cell day-header ${isToday ? 'today' : ''}`}>
-                <span className="day-name">{format(day, 'E', { locale: es })}</span>
-                <span className="day-number">{format(day, 'd')}</span>
+      {viewMode === 'calendar' ? (
+        <div 
+          className="calendar-grid-wrapper"
+          ref={gridRef}
+          onMouseDown={handleWrapperMouseDown}
+          onMouseMove={handleWrapperMouseMove}
+          onMouseUp={handleWrapperMouseUpOrLeave}
+          onMouseLeave={handleWrapperMouseUpOrLeave}
+          style={{ cursor: isPanning ? 'grabbing' : 'auto' }}
+        >
+          <div className="calendar-grid">
+            {/* Header Row */}
+            <div className="calendar-row header-row">
+              <div className={`calendar-cell cabin-name-header ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+                {isSidebarCollapsed ? 'Tour' : 'Tour / Excursión'}
               </div>
-            )})}
-          </div>
-
-          {/* Tour Rows */}
-          {tours.map(tour => (
-            <div key={tour.id} className="calendar-row">
-              <div className={`calendar-cell cabin-name-cell ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-                <div className="cabin-color-dot" style={{ backgroundColor: tour.color || '#8e44ad' }}></div>
-                {!isSidebarCollapsed && (
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <strong>{tour.name}</strong>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                      ${Number(tour.price).toLocaleString('es-CL')}/pax
-                    </span>
-                  </div>
-                )}
-              </div>
-              
               {daysInMonth.map(day => {
-                const dayReservations = getReservationsForDay(tour.id, day);
-                const isTodayCol = isSameDay(day, new Date());
+                const isToday = isSameDay(day, new Date());
+                return (
+                <div key={day.toISOString()} id={`tour-day-header-${format(day, 'yyyy-MM-dd')}`} className={`calendar-cell day-header ${isToday ? 'today' : ''}`}>
+                  <span className="day-name">{format(day, 'E', { locale: es })}</span>
+                  <span className="day-number">{format(day, 'd')}</span>
+                </div>
+              )})}
+            </div>
 
-                if (dayReservations.length === 0) {
+            {/* Tour Rows */}
+            {tours.map(tour => (
+              <div key={tour.id} className="calendar-row">
+                <div className={`calendar-cell cabin-name-cell ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+                  <div className="cabin-color-dot" style={{ backgroundColor: tour.color || '#8e44ad' }}></div>
+                  {!isSidebarCollapsed && (
+                    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      <strong style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tour.name}</strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                        ${Number(tour.price).toLocaleString('es-CL')}/pax
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {daysInMonth.map(day => {
+                  const dayReservations = getReservationsForDay(tour.id, day);
+                  const isTodayCol = isSameDay(day, new Date());
+
+                  if (dayReservations.length === 0) {
+                    return (
+                      <div 
+                        key={day.toISOString()} 
+                        className={`calendar-cell day-cell free ${isTodayCol ? 'today-col' : ''}`}
+                        onClick={() => openNewReservationForDay(tour.id, day)}
+                        title="Haz clic para agendar un tour en este día"
+                      ></div>
+                    );
+                  }
+
                   return (
                     <div 
                       key={day.toISOString()} 
-                      className={`calendar-cell day-cell free ${isTodayCol ? 'today-col' : ''}`}
-                      onClick={() => openNewReservationForDay(tour.id, day)}
-                      title="Haz clic para agendar un tour en este día"
-                    ></div>
+                      className={`calendar-cell day-cell booked ${isTodayCol ? 'today-col' : ''}`}
+                      style={{ cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (dayReservations[0]) {
+                          setEditingId(dayReservations[0].id);
+                          setResForm({
+                            ...dayReservations[0],
+                            date: formatSafeDate(dayReservations[0].date, 'yyyy-MM-dd')
+                          });
+                          setIsModalOpen(true);
+                          setPopover({ visible: false, res: null, x: 0, y: 0 });
+                        }
+                      }}
+                    >
+                      {dayReservations.map((res) => {
+                        const customStyle = { 
+                          backgroundColor: tour.color || '#8e44ad', 
+                          cursor: 'pointer',
+                          borderRadius: '6px',
+                          padding: '2px 6px',
+                          pointerEvents: 'auto'
+                        };
+
+                        return (
+                          <div 
+                            key={res.id}
+                            className="reservation-bar start-day end-day"
+                            style={customStyle}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingId(res.id);
+                              setResForm({
+                                ...res,
+                                date: formatSafeDate(res.date, 'yyyy-MM-dd')
+                              });
+                              setIsModalOpen(true);
+                              setPopover({ visible: false, res: null, x: 0, y: 0 });
+                            }}
+                            onMouseEnter={(e) => {
+                              clearTimeout(window.popoverTimeout);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setPopover({ visible: true, res, x: e.clientX, y: rect.top - 10 });
+                            }}
+                            onMouseLeave={() => {
+                              window.popoverTimeout = setTimeout(() => setPopover({ visible: false, res: null, x: 0, y: 0 }), 150);
+                            }}
+                          >
+                            <span className="reservation-client" style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
+                              {res.time || ''} {res.clientName} ({res.paxCount} Pax)
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   );
-                }
-
-                return (
-                  <div 
-                    key={day.toISOString()} 
-                    className={`calendar-cell day-cell booked ${isTodayCol ? 'today-col' : ''}`}
-                  >
-                    {dayReservations.map((res) => {
-                      const customStyle = { 
-                        backgroundColor: tour.color || '#8e44ad', 
-                        cursor: 'pointer',
-                        borderRadius: '6px',
-                        padding: '2px 6px'
-                      };
-
-                      return (
-                        <div 
-                          key={res.id}
-                          className="reservation-bar start-day end-day"
-                          style={customStyle}
-                          onMouseEnter={(e) => {
-                            clearTimeout(window.popoverTimeout);
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setPopover({ visible: true, res, x: e.clientX, y: rect.top - 10 });
-                          }}
-                          onMouseLeave={() => {
-                            window.popoverTimeout = setTimeout(() => setPopover({ visible: false, res: null, x: 0, y: 0 }), 150);
-                          }}
-                        >
-                          <span className="reservation-client" style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-                            {res.time || ''} {res.clientName} ({res.paxCount} Pax)
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-          {tours.length === 0 && (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              No hay tours registrados. Ve a "Conf. Tours" para agregar opciones al catálogo.
-            </div>
-          )}
+                })}
+              </div>
+            ))}
+            {tours.length === 0 && (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                No hay tours registrados. Ve a "Conf. Tours" para agregar opciones al catálogo.
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        /* CRUD TABLE VIEW FOR TOUR RESERVATIONS */
+        <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '1.25rem', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+          {/* Filters and Search Bar */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Buscar por cliente o teléfono..." 
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                style={{ paddingLeft: '38px' }}
+              />
+            </div>
+            <div style={{ minWidth: '200px' }}>
+              <select 
+                className="form-input" 
+                value={selectedTourFilter}
+                onChange={e => setSelectedTourFilter(e.target.value)}
+              >
+                <option value="">Todos los Tours</option>
+                {tours.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="table-container" style={{ overflowX: 'auto' }}>
+            <table className="reservations-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                  <th style={{ padding: '0.75rem 1rem' }}>Fecha / Hora</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Tour Excursión</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Cliente / Titular</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Teléfono</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Pasajeros (Pax)</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Total ($)</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Acciones CRUD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tourReservations
+                  .filter(res => {
+                    const matchSearch = !searchTerm || res.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) || res.clientPhone?.includes(searchTerm);
+                    const matchTour = !selectedTourFilter || res.tourId === selectedTourFilter;
+                    return matchSearch && matchTour;
+                  })
+                  .map(res => {
+                    const tour = tours.find(t => t.id === res.tourId);
+                    return (
+                      <tr key={res.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <strong>{formatSafeDate(res.date, 'dd/MM/yyyy')}</strong>
+                          <div style={{ fontSize: '0.78rem', color: '#64748b' }}>⏰ {res.time || '09:00'}</div>
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: tour?.color || '#8e44ad' }}></div>
+                            <strong>{tour ? tour.name : 'Tour'}</strong>
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <strong>{res.clientName}</strong>
+                          {res.notes && <div style={{ fontSize: '0.75rem', color: '#64748b' }}>📝 {res.notes}</div>}
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem', fontSize: '0.88rem' }}>
+                          {res.clientPhone || '-'}
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem', fontWeight: 'bold' }}>
+                          {res.paxCount || 1} Pax
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem', color: '#16a34a', fontWeight: 'bold' }}>
+                          ${Number(res.totalCost || 0).toLocaleString('es-CL')}
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <div className="actions" style={{ display: 'flex', gap: '6px' }}>
+                            <button 
+                              className="btn-icon" 
+                              title="Editar Reserva"
+                              onClick={() => {
+                                setEditingId(res.id);
+                                setResForm({
+                                  ...res,
+                                  date: formatSafeDate(res.date, 'yyyy-MM-dd')
+                                });
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              <Edit2 size={18} color="#2563eb" />
+                            </button>
+                            {res.clientPhone && (
+                              <button 
+                                className="btn-icon" 
+                                title="Enviar WhatsApp"
+                                onClick={() => {
+                                  setWaReservation(res);
+                                  setWaModalOpen(true);
+                                }}
+                              >
+                                <MessageCircle size={18} color="#25D366" />
+                              </button>
+                            )}
+                            <button 
+                              className="btn-icon danger" 
+                              title="Eliminar Reserva"
+                              onClick={() => {
+                                if (window.confirm(`¿Estás seguro de eliminar la reserva de tour de ${res.clientName}?`)) {
+                                  deleteTourReservation(res.id);
+                                }
+                              }}
+                            >
+                              <Trash2 size={18} color="#ef4444" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                {tourReservations.length === 0 && (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                      No hay reservas de tours registradas en la base de datos.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Popover Detalle */}
       {popover.visible && popover.res && createPortal(
