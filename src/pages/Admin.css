@@ -1,25 +1,24 @@
 .admin-page {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
 .admin-grid {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 2rem;
-}
-
-@media (max-width: 900px) {
-  .admin-grid {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
 }
 
 .admin-section {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--glass-shadow);
 }
 
 .section-header-row {
@@ -36,16 +35,13 @@
 
 .save-msg {
   margin-left: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--success);
   animation: fadeIn 0.3s ease-in;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 .btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.88rem;
 }
