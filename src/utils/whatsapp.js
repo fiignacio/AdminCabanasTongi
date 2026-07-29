@@ -77,6 +77,39 @@ export const generateTourMessage = (res, tourName, template = 'confirmation', bu
   return msg;
 };
 
+export const generateAdminDailySummaryMessage = (upcomingCars = [], upcomingTours = [], businessName = 'Nuestra Administración') => {
+  let msg = `📊 *RESUMEN OPERATIVO DIARIO - ${businessName.toUpperCase()}*\n`;
+  msg += `🗓️ Generado: ${new Date().toLocaleDateString('es-CL')}\n\n`;
+
+  if (upcomingCars.length === 0 && upcomingTours.length === 0) {
+    msg += `✅ ¡No hay actividades o entregas pendientes programadas para hoy ni mañana!`;
+    return msg;
+  }
+
+  if (upcomingCars.length > 0) {
+    msg += `🚗 *ARRIENDOS DE VEHÍCULOS (${upcomingCars.length}):*\n`;
+    upcomingCars.forEach((item, idx) => {
+      msg += `${idx + 1}. Client: *${item.res.clientName}* (${item.res.clientPhone || 'Sin fono'})\n`;
+      msg += `   • Auto: ${item.carName}\n`;
+      msg += `   • Evento: ${item.type} (${item.dateStr})\n`;
+    });
+    msg += `\n`;
+  }
+
+  if (upcomingTours.length > 0) {
+    msg += `🧭 *TOURS Y EXCURSIONES (${upcomingTours.length}):*\n`;
+    upcomingTours.forEach((item, idx) => {
+      msg += `${idx + 1}. Client: *${item.res.clientName}* (${item.res.paxCount || 1} Pax)\n`;
+      msg += `   • Tour: ${item.tourName}\n`;
+      msg += `   • Horario: ${item.dateStr} a las ${item.res.time || '09:00'}\n`;
+    });
+    msg += `\n`;
+  }
+
+  msg += `⚡ *Sistema Automático de Alertas para la Administración.*`;
+  return msg;
+};
+
 export const generateQuoteMessage = (titular, pdfUrl = '', businessName = 'nuestra administración') => {
   let msg = `¡Hola ${titular ? '*' + titular + '*' : 'estimado/a'}! 👋\nTe envío la cotización formal de tu estadía en ${businessName}, incluyendo el desglose detallado de huéspedes y extras.\n\n`;
   if (pdfUrl) {
