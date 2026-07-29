@@ -12,7 +12,7 @@ import {
   isSameDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Calendar, Compass, Users, Edit2, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Calendar, Compass, Users, Trash2, Edit2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import WhatsAppModal from '../components/WhatsAppModal';
 import { parseSafeDate, formatSafeDate } from '../utils/dateUtils';
