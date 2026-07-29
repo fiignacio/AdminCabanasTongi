@@ -303,7 +303,7 @@ const TourCalendar = () => {
           className="calendar-popover glass-panel"
           style={{
             position: 'fixed',
-            top: `${Math.max(10, popover.y - 100)}px`,
+            top: `${Math.max(10, popover.y - 145)}px`,
             left: `${popover.x}px`,
             transform: 'translateX(-50%)',
             zIndex: 999999,
@@ -426,7 +426,7 @@ const TourCalendar = () => {
 
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-primary">Registrar Reserva de Tour</button>
+                <button type="submit" className="btn btn-primary">{editingId ? "Guardar Cambios de Tour" : "Registrar Reserva de Tour"}</button>
               </div>
             </form>
           </div>

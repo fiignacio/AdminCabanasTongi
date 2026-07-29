@@ -450,7 +450,11 @@ const CarCalendar = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditingId(res.id);
-                            setResForm(res);
+                            setResForm({
+                              ...res,
+                              startDate: formatSafeDate(res.startDate, 'yyyy-MM-dd'),
+                              endDate: formatSafeDate(res.endDate, 'yyyy-MM-dd')
+                            });
                             setIsModalOpen(true);
                             setPopover({ visible: false, res: null, x: 0, y: 0 });
                           }}
@@ -495,7 +499,7 @@ const CarCalendar = () => {
           className="calendar-popover glass-panel"
           style={{
             position: 'fixed',
-            top: `${Math.max(10, popover.y - 100)}px`,
+            top: `${Math.max(10, popover.y - 145)}px`,
             left: `${popover.x}px`,
             transform: 'translateX(-50%)',
             zIndex: 999999,
