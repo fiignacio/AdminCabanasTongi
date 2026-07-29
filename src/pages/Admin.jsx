@@ -15,7 +15,7 @@ const THEME_PRESETS = [
 const Admin = () => {
   const { 
     prices, updatePrices, 
-    cabins, addCabin, updateCabin, deleteCabin,
+    
     businessConfig, updateBusinessConfig, resetSetup 
   } = useStore();
   

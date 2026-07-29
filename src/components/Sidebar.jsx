@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, Compass, BookOpen, BarChart3, Tent, Settings, Calculator, Users, RefreshCw, Car, LogOut, WifiOff, CloudOff } from 'lucide-react';
+import { Compass, BarChart3, Car, Settings, Calculator, Users, RefreshCw, WifiOff, CloudOff, Palette } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { FEATURES } from '../config/features';
 import './Sidebar.css';
 
 const Sidebar = ({ onClose }) => {
-  const { logout, offlineQueue, businessConfig } = useStore();
+  const { offlineQueue, businessConfig } = useStore();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -20,24 +20,16 @@ const Sidebar = ({ onClose }) => {
     };
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    if (onClose) onClose();
-  };
-
   const allMenuItems = [
-    { path: '/admin/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} />, enabled: true },
-    { path: '/admin/calendar', name: 'Cal. Cabañas', icon: <CalendarDays size={20} />, enabled: true },
     { path: '/admin/cars-calendar', name: 'Cal. Vehículos', icon: <Car size={20} />, enabled: true },
     { path: '/admin/tours-calendar', name: 'Cal. Tours', icon: <Compass size={20} />, enabled: true },
-    { path: '/admin/reservations', name: 'Reservas', icon: <BookOpen size={20} />, enabled: true },
     { path: '/admin/reports', name: 'Reportes', icon: <BarChart3 size={20} />, enabled: true },
+    { path: '/admin/cars-settings', name: 'Flota Vehículos', icon: <Settings size={20} />, enabled: true },
+    { path: '/admin/tours-settings', name: 'Conf. Tours', icon: <Settings size={20} />, enabled: true },
+    { path: '/admin/settings', name: 'Personalización', icon: <Palette size={20} />, enabled: true },
     { path: '/admin/tools/quote', name: 'Cotizador', icon: <Calculator size={20} />, enabled: FEATURES.showQuote },
     { path: '/admin/tools/passengers', name: 'Pasajeros', icon: <Users size={20} />, enabled: FEATURES.showPassengers },
     { path: '/admin/sync', name: 'Sincronización', icon: <RefreshCw size={20} />, enabled: true },
-    { path: '/admin/cars-settings', name: 'Flota Vehículos', icon: <Settings size={20} />, enabled: true },
-    { path: '/admin/tours-settings', name: 'Conf. Tours', icon: <Settings size={20} />, enabled: true },
-    { path: '/admin/settings', name: 'Conf. Cabañas', icon: <Settings size={20} />, enabled: true },
   ];
 
   const menuItems = allMenuItems.filter(item => item.enabled);
@@ -45,8 +37,8 @@ const Sidebar = ({ onClose }) => {
   return (
     <aside className="sidebar glass-panel">
       <div className="sidebar-header">
-        <Tent className="logo-icon" size={28} style={{ color: businessConfig?.primaryColor || 'var(--accent-primary)' }} />
-        <h2 style={{ fontSize: '1.1rem', wordBreak: 'break-word' }}>{businessConfig?.businessName || 'Mi Complejo'}</h2>
+        <Car className="logo-icon" size={28} style={{ color: businessConfig?.primaryColor || 'var(--accent-primary)' }} />
+        <h2 style={{ fontSize: '1.1rem', wordBreak: 'break-word' }}>{businessConfig?.businessName || 'Mi Administración'}</h2>
       </div>
       
       {!isOnline && (
@@ -74,8 +66,6 @@ const Sidebar = ({ onClose }) => {
             </NavLink>
           ))}
         </div>
-        
-        
       </nav>
     </aside>
   );

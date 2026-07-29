@@ -13,7 +13,7 @@ const THEME_PRESETS = [
 ];
 
 export default function OnboardingModal() {
-  const { businessConfig, updateBusinessConfig, cabins, addCabin, updateCabin, deleteCabin } = useStore();
+  const { businessConfig, updateBusinessConfig } = useStore();
   const [step, setStep] = useState(1);
 
   // Form State
@@ -53,31 +53,13 @@ export default function OnboardingModal() {
   };
 
   const handleFinish = () => {
-    // 1. Update business config & mark setup completed
     updateBusinessConfig({
-      businessName: businessName.trim() || 'Mi Complejo de Cabañas',
+      businessName: businessName.trim() || 'Mi Administración',
       administratorName: administratorName.trim() || 'Administrador',
       contactPhone: contactPhone.trim(),
       contactEmail: contactEmail.trim(),
       primaryColor,
       isSetupCompleted: true
-    });
-
-    // 2. Sync cabins to store
-    localCabins.forEach(cab => {
-      const exists = cabins.find(c => c.id === cab.id);
-      if (exists) {
-        updateCabin(cab.id, { name: cab.name, maxCapacity: cab.maxCapacity, color: cab.color });
-      } else {
-        addCabin({ name: cab.name, maxCapacity: cab.maxCapacity, color: cab.color, type: 'standard' });
-      }
-    });
-
-    // Remove deleted cabins if any
-    cabins.forEach(c => {
-      if (!localCabins.find(lc => lc.id === c.id)) {
-        deleteCabin(c.id);
-      }
     });
   };
 
@@ -221,7 +203,7 @@ export default function OnboardingModal() {
         )}
 
         {/* Step 3: Theme & Visual Style */}
-        {step === 3 && (
+        {step === 2 && (
           <div className="step-content">
             <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>
               <Palette size={18} style={{ display: 'inline', marginRight: 6 }} /> Personaliza el Tema de la Aplicación
@@ -262,7 +244,7 @@ export default function OnboardingModal() {
             <div></div>
           )}
 
-          {step < 3 ? (
+          {step < 2 ? (
             <button className="btn btn-primary" onClick={() => setStep(step + 1)}>
               Siguiente <ChevronRight size={18} />
             </button>
