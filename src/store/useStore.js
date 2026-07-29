@@ -17,7 +17,7 @@ export const useStore = create(
     (set, get) => ({
       // BUSINESS CONFIG & PERSONALIZATION
       businessConfig: {
-        businessName: 'Mi Complejo de Cabañas',
+        businessName: 'Rent-a-Car & Tours',
         administratorName: 'Administrador Principal',
         primaryColor: '#2c4c3b',
         contactPhone: '',
@@ -425,7 +425,7 @@ export const useStore = create(
       }
     }),
     {
-      name: 'cabin-storage',
+      name: 'client-tongi-v1-storage',
     }
   )
 );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Sparkles, Building2, UserCheck, Palette, CheckCircle2, ChevronRight, ChevronLeft, Plus, Trash2, Home } from 'lucide-react';
+import { Sparkles, Building2, Palette, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
 import './OnboardingModal.css';
 
 const THEME_PRESETS = [
@@ -17,44 +17,15 @@ export default function OnboardingModal() {
   const [step, setStep] = useState(1);
 
   // Form State
-  const [businessName, setBusinessName] = useState(businessConfig.businessName || 'Cabañas El Paraíso');
+  const [businessName, setBusinessName] = useState(businessConfig.businessName || 'Rent-a-Car & Tours');
   const [administratorName, setAdministratorName] = useState(businessConfig.administratorName || 'Administrador General');
   const [contactPhone, setContactPhone] = useState(businessConfig.contactPhone || '');
   const [contactEmail, setContactEmail] = useState(businessConfig.contactEmail || '');
   const [primaryColor, setPrimaryColor] = useState(businessConfig.primaryColor || '#2c4c3b');
 
-  // Local cabins state for fast editing during onboarding
-  const [localCabins, setLocalCabins] = useState([
-    { id: '1', name: 'Cabaña Grande', maxCapacity: 6, color: '#D35400' },
-    { id: '2', name: 'Cabaña Pequeña', maxCapacity: 3, color: '#556B2F' },
-    { id: '3', name: 'Cabaña Mediana 1', maxCapacity: 4, color: '#B8860B' }
-  ]);
-
-  const handleCabinChange = (id, field, value) => {
-    setLocalCabins(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
-  };
-
-  const handleAddCabin = () => {
-    const newId = Date.now().toString();
-    setLocalCabins(prev => [...prev, {
-      id: newId,
-      name: `Cabaña ${prev.length + 1}`,
-      maxCapacity: 4,
-      color: '#2980b9'
-    }]);
-  };
-
-  const handleRemoveCabin = (id) => {
-    if (localCabins.length <= 1) {
-      alert("Debes mantener al menos una cabaña en el sistema.");
-      return;
-    }
-    setLocalCabins(prev => prev.filter(c => c.id !== id));
-  };
-
   const handleFinish = () => {
     updateBusinessConfig({
-      businessName: businessName.trim() || 'Mi Administración',
+      businessName: businessName.trim() || 'Rent-a-Car & Tours',
       administratorName: administratorName.trim() || 'Administrador',
       contactPhone: contactPhone.trim(),
       contactEmail: contactEmail.trim(),
@@ -70,7 +41,7 @@ export default function OnboardingModal() {
       <div className="onboarding-modal">
         <div className="onboarding-header">
           <h1><Sparkles size={24} color={primaryColor} /> Bienvenido a tu Administrador</h1>
-          <p>Personaliza la información inicial de tu propiedad y cabañas para comenzar.</p>
+          <p>Personaliza la información inicial de tu empresa de Arriendo de Vehículos y Tours.</p>
         </div>
 
         {/* Wizard Steps Indicator */}
@@ -79,12 +50,8 @@ export default function OnboardingModal() {
             {step > 1 ? <CheckCircle2 size={20} /> : '1'}
             <span className="step-label">Identidad</span>
           </div>
-          <div className={`step-indicator ${step >= 2 ? (step === 2 ? 'active' : 'completed') : ''}`}>
-            {step > 2 ? <CheckCircle2 size={20} /> : '2'}
-            <span className="step-label">Cabañas</span>
-          </div>
-          <div className={`step-indicator ${step >= 3 ? 'active' : ''}`}>
-            '3'
+          <div className={`step-indicator ${step >= 2 ? 'active' : ''}`}>
+            '2'
             <span className="step-label">Apariencia</span>
           </div>
         </div>
@@ -93,17 +60,17 @@ export default function OnboardingModal() {
         {step === 1 && (
           <div className="step-content">
             <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: '#1e293b' }}>
-              <Building2 size={18} style={{ display: 'inline', marginRight: 6 }} /> Datos del Establecimiento
+              <Building2 size={18} style={{ display: 'inline', marginRight: 6 }} /> Datos de la Empresa
             </h3>
             
             <div className="form-group">
-              <label className="form-label">Nombre del Complejo / Cabañas</label>
+              <label className="form-label">Nombre de la Empresa / Negocio</label>
               <input 
                 type="text" 
                 className="form-input" 
                 value={businessName} 
                 onChange={e => setBusinessName(e.target.value)}
-                placeholder="Ej: Cabañas Los Alerces" 
+                placeholder="Ej: Rent-a-Car & Tours Rapa Nui" 
                 required 
               />
             </div>
@@ -115,14 +82,14 @@ export default function OnboardingModal() {
                 className="form-input" 
                 value={administratorName} 
                 onChange={e => setAdministratorName(e.target.value)}
-                placeholder="Ej: María González / Administración" 
+                placeholder="Ej: Juan Pérez / Administración" 
                 required 
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Teléfono de Contacto (Opcional)</label>
+            <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">Teléfono de Contacto</label>
                 <input 
                   type="text" 
                   className="form-input" 
@@ -131,78 +98,21 @@ export default function OnboardingModal() {
                   placeholder="+56 9 1234 5678" 
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">Email de Contacto (Opcional)</label>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">Email de Contacto</label>
                 <input 
                   type="email" 
                   className="form-input" 
                   value={contactEmail} 
                   onChange={e => setContactEmail(e.target.value)}
-                  placeholder="contacto@cabanas.cl" 
+                  placeholder="contacto@empresa.cl" 
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 2: Cabins Configuration */}
-        {step === 2 && (
-          <div className="step-content">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>
-                <Home size={18} style={{ display: 'inline', marginRight: 6 }} /> Configuración Inicial de Cabañas
-              </h3>
-              <button className="btn btn-secondary btn-sm" onClick={handleAddCabin}>
-                <Plus size={16} /> Agregar Cabaña
-              </button>
-            </div>
-            
-            <p className="text-secondary" style={{ margin: 0, fontSize: '0.85rem' }}>
-              Define los nombres, capacidad y el color distintivo con el que verás cada cabaña en los calendarios.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto' }}>
-              {localCabins.map(cabin => (
-                <div key={cabin.id} className="cabin-setup-row">
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    style={{ padding: '6px 10px', fontSize: '0.9rem' }}
-                    value={cabin.name} 
-                    onChange={e => handleCabinChange(cabin.id, 'name', e.target.value)}
-                    placeholder="Nombre Cabaña" 
-                  />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <input 
-                      type="number" 
-                      min="1" 
-                      className="form-input" 
-                      style={{ padding: '6px 10px', fontSize: '0.9rem' }}
-                      value={cabin.maxCapacity} 
-                      onChange={e => handleCabinChange(cabin.id, 'maxCapacity', Number(e.target.value))}
-                    />
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Pax</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <input 
-                      type="color" 
-                      className="form-input" 
-                      style={{ padding: '2px', height: '34px', width: '40px', cursor: 'pointer' }}
-                      value={cabin.color || '#2980b9'} 
-                      onChange={e => handleCabinChange(cabin.id, 'color', e.target.value)}
-                    />
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Color</span>
-                  </div>
-                  <button className="btn-icon danger" onClick={() => handleRemoveCabin(cabin.id)} title="Eliminar cabaña">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Theme & Visual Style */}
+        {/* Step 2: Theme & Visual Style */}
         {step === 2 && (
           <div className="step-content">
             <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>
@@ -228,7 +138,7 @@ export default function OnboardingModal() {
             {/* Live Preview Card */}
             <div style={{ marginTop: '1rem', padding: '1rem', borderRadius: '12px', background: '#f8fafc', border: `2px solid ${primaryColor}` }}>
               <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vista Previa de Marca</span>
-              <h2 style={{ color: primaryColor, margin: '0.25rem 0' }}>{businessName || 'Mi Complejo de Cabañas'}</h2>
+              <h2 style={{ color: primaryColor, margin: '0.25rem 0' }}>{businessName || 'Rent-a-Car & Tours'}</h2>
               <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}>Administrado por: <strong>{administratorName || 'Administrador'}</strong></p>
             </div>
           </div>
