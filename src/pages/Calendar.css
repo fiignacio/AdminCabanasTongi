@@ -196,6 +196,8 @@
 }
 
 .reservation-bar {
+  pointer-events: auto !important;
+  cursor: pointer !important;
   position: absolute;
   top: 8px;
   bottom: 8px;

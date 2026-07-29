@@ -452,6 +452,7 @@ const CarCalendar = () => {
                             setEditingId(res.id);
                             setResForm(res);
                             setIsModalOpen(true);
+                            setPopover({ visible: false, res: null, x: 0, y: 0 });
                           }}
                           onDragStart={(e) => handleDragStart(e, res.id)}
                           onMouseEnter={(e) => {
