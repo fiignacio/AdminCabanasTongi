@@ -86,19 +86,35 @@ const CarCalendar = () => {
     }
   }, []);
 
-  // Auto-scroll al primer día del mes cuando cambia currentDate o se carga el componente
-  useEffect(() => {
-    if (gridRef.current) {
-      const firstDay = format(startOfMonth(currentDate), 'yyyy-MM-dd');
-      const element = document.getElementById(`day-header-car-${firstDay}`);
-      if (element) {
-        gridRef.current.scrollTo({
-          left: Math.max(0, element.offsetLeft - 220),
-          behavior: 'smooth'
-        });
+  // Scroll al día de HOY
+  const scrollToToday = () => {
+    const today = new Date();
+    setCurrentDate(today);
+    const todayStr = format(today, 'yyyy-MM-dd');
+    
+    const tryScroll = (attempts = 0) => {
+      if (gridRef.current) {
+        const element = document.getElementById(`car-day-header-${todayStr}`);
+        if (element) {
+          const scrollPos = Math.max(0, element.offsetLeft - 260);
+          gridRef.current.scrollTo({
+            left: scrollPos,
+            behavior: 'smooth'
+          });
+          return;
+        }
       }
-    }
-  }, [currentDate]);
+      if (attempts < 10) {
+        setTimeout(() => tryScroll(attempts + 1), 80);
+      }
+    };
+    tryScroll();
+  };
+
+  // Al abrir el calendario, posicionar siempre sobre el día de hoy
+  useEffect(() => {
+    scrollToToday();
+  }, []);
 
   // Detener Swipe-to-Select si el ratón se levanta fuera
   useEffect(() => {
