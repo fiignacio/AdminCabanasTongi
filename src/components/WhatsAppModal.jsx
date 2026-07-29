@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
 import { X, MessageCircle, RefreshCw } from 'lucide-react';
-import { generateWhatsAppLink, generateCabinMessage, generateCarMessage } from '../utils/whatsapp';
+import { generateWhatsAppLink, generateCarMessage, generateTourMessage } from '../utils/whatsapp';
+import { useStore } from '../store/useStore';
 
 const WhatsAppModal = ({ isOpen, onClose, reservation, type, contextName }) => {
+  const { businessConfig } = useStore();
   const [template, setTemplate] = useState('confirmation');
   const [message, setMessage] = useState('');
 
+  const bName = businessConfig?.businessName || 'nuestra administración';
+
   useEffect(() => {
     if (isOpen && reservation) {
-      if (type === 'cabin') {
-        setMessage(generateCabinMessage(reservation, contextName, template));
+      if (type === 'tour') {
+        setMessage(generateTourMessage(reservation, contextName, template, bName));
       } else {
-        setMessage(generateCarMessage(reservation, contextName, template));
+        setMessage(generateCarMessage(reservation, contextName, template, bName));
       }
     }
-  }, [isOpen, reservation, template, type, contextName]);
+  }, [isOpen, reservation, template, type, contextName, bName]);
 
   if (!isOpen || !reservation) return null;
 
@@ -24,36 +28,54 @@ const WhatsAppModal = ({ isOpen, onClose, reservation, type, contextName }) => {
     onClose();
   };
 
+  const handleRefresh = () => {
+    if (type === 'tour') {
+      setMessage(generateTourMessage(reservation, contextName, template, bName));
+    } else {
+      setMessage(generateCarMessage(reservation, contextName, template, bName));
+    }
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content glass-panel" style={{ maxWidth: '600px' }}>
         <div className="modal-header">
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
             <MessageCircle size={24} color="#25D366" /> 
             Enviar WhatsApp
           </h2>
           <button className="btn-icon" onClick={onClose}><X size={24} /></button>
         </div>
 
-        <div style={{ marginBottom: '1.5rem', background: 'rgba(37, 211, 102, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
+        <div style={{ marginBottom: '1.5rem', background: 'rgba(37, 211, 102, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
           <div className="form-group" style={{ marginBottom: '0' }}>
-            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              Destinatario: <strong>{reservation.clientName} ({reservation.clientPhone})</strong>
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', margin: 0 }}>
+              Destinatario: <strong>{reservation.clientName} ({reservation.clientPhone || 'Sin número registrado'})</strong>
             </label>
           </div>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Elegir Plantilla</label>
+          <label className="form-label">Elegir Plantilla de Notificación</label>
           <select 
             className="form-input" 
             value={template} 
             onChange={(e) => setTemplate(e.target.value)}
           >
-            <option value="confirmation">Confirmación de Reserva</option>
-            <option value="checkin">Recordatorio de Check-in (con Mapa)</option>
-            {type === 'cabin' && <option value="checkout">Despedida / Check-out (Pedir Reseña)</option>}
-            <option value="payment">Cobro de Saldo Pendiente</option>
+            {type === 'tour' ? (
+              <>
+                <option value="confirmation">Confirmación de Reserva de Tour</option>
+                <option value="reminder">🔔 Recordatorio de Próximo Tour (Fecha, Hora & Recomendaciones)</option>
+                <option value="payment">💰 Cobro de Saldo Pendiente</option>
+              </>
+            ) : (
+              <>
+                <option value="confirmation">Confirmación de Arriendo de Vehículo</option>
+                <option value="checkin">🚗 Recordatorio de Retiro / Entrega de Vehículo</option>
+                <option value="checkout">🏁 Recordatorio de Devolución de Vehículo</option>
+                <option value="payment">💰 Cobro de Saldo Pendiente</option>
+              </>
+            )}
           </select>
         </div>
 
@@ -63,25 +85,25 @@ const WhatsAppModal = ({ isOpen, onClose, reservation, type, contextName }) => {
             <button 
               className="btn-icon" 
               style={{ padding: '4px' }} 
-              title="Restaurar texto original"
-              onClick={() => setMessage(type === 'cabin' ? generateCabinMessage(reservation, contextName, template) : generateCarMessage(reservation, contextName, template))}
+              title="Restaurar texto original de la plantilla"
+              onClick={handleRefresh}
             >
               <RefreshCw size={14} />
             </button>
           </label>
           <textarea 
             className="form-input" 
-            rows={10} 
+            rows={9} 
             value={message} 
             onChange={(e) => setMessage(e.target.value)}
             style={{ fontFamily: 'inherit', resize: 'vertical' }}
           />
           <small className="text-secondary" style={{ display: 'block', marginTop: '0.5rem' }}>
-            Puedes editar este texto libremente antes de enviarlo. No se guardará en la base de datos, solo se enviará por WhatsApp.
+            Puedes editar este texto libremente antes de enviarlo por WhatsApp.
           </small>
         </div>
 
-        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
           <button 
             type="button" 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Settings, Save, Building2, Palette, RefreshCw } from 'lucide-react';
+import { Settings, Save, Building2, Palette, RefreshCw, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
 import './Admin.css';
 
 const THEME_PRESETS = [
@@ -21,7 +21,8 @@ const Admin = () => {
     administratorName: businessConfig.administratorName || '',
     contactPhone: businessConfig.contactPhone || '',
     contactEmail: businessConfig.contactEmail || '',
-    primaryColor: businessConfig.primaryColor || '#2c4c3b'
+    primaryColor: businessConfig.primaryColor || '#2c4c3b',
+    logoUrl: businessConfig.logoUrl || ''
   });
   const [brandSaved, setBrandSaved] = useState(false);
 
@@ -32,12 +33,26 @@ const Admin = () => {
     setTimeout(() => setBrandSaved(false), 3000);
   };
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('La imagen del logo no debe superar los 2MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBrandForm(prev => ({ ...prev, logoUrl: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="admin-page">
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1><Settings size={28} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 8 }} /> Personalización de Marca y Tema</h1>
-          <p className="text-secondary">Personaliza el nombre comercial de tu negocio, quién administra, datos de contacto y la paleta de colores de la app.</p>
+          <p className="text-secondary">Personaliza el logo de tu empresa, nombre comercial, administrador, datos de contacto y colores de la app.</p>
         </div>
         <button className="btn btn-secondary" onClick={() => { resetSetup(); window.location.reload(); }}>
           <RefreshCw size={18} /> Re-iniciar Asistente Inicial
@@ -48,9 +63,34 @@ const Admin = () => {
         {/* 1. Panel de Identidad y Marca */}
         <div className="card glass-panel admin-section" style={{ gridColumn: 'span 1' }}>
           <h2><Building2 size={22} style={{ display: 'inline', marginRight: 8, color: brandForm.primaryColor }} /> Marca y Administración</h2>
-          <p className="text-secondary" style={{ fontSize: '0.85rem' }}>Personaliza el nombre de tu empresa, datos de contacto y administrador.</p>
+          <p className="text-secondary" style={{ fontSize: '0.85rem' }}>Sube tu logo institucional y personaliza los datos corporativos.</p>
           
           <form onSubmit={handleBrandSubmit} className="prices-form">
+            {/* Carga de Logo */}
+            <div className="form-group">
+              <label className="form-label"><ImageIcon size={16} style={{ display: 'inline', marginRight: 6 }} /> Logo de la Empresa</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '6px' }}>
+                {brandForm.logoUrl ? (
+                  <div style={{ position: 'relative', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '6px', background: '#ffffff', display: 'inline-block' }}>
+                    <img src={brandForm.logoUrl} alt="Logo Preview" style={{ height: 50, maxWidth: 120, objectFit: 'contain', display: 'block' }} />
+                    <button 
+                      type="button" 
+                      onClick={() => setBrandForm({...brandForm, logoUrl: ''})}
+                      style={{ position: 'absolute', top: -8, right: -8, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: 22, height: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Eliminar Logo"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="btn btn-secondary" style={{ cursor: 'pointer', fontSize: '0.88rem' }}>
+                    <Upload size={16} /> Subir Imagen del Logo (PNG, JPG, SVG)
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                  </label>
+                )}
+              </div>
+            </div>
+
             <div className="form-group">
               <label className="form-label">Nombre del Negocio / Empresa</label>
               <input 
@@ -127,7 +167,7 @@ const Admin = () => {
               <button type="submit" className="btn btn-primary" style={{ backgroundColor: brandForm.primaryColor }}>
                 <Save size={18} /> Guardar Personalización
               </button>
-              {brandSaved && <span className="text-success save-msg">¡Marca y tema actualizados con éxito!</span>}
+              {brandSaved && <span className="text-success save-msg">¡Marca y logo actualizados con éxito!</span>}
             </div>
           </form>
         </div>
@@ -135,10 +175,16 @@ const Admin = () => {
         {/* 2. Vista Previa de Marca */}
         <div className="card glass-panel admin-section" style={{ background: 'linear-gradient(135deg, #ffffff 0%, rgba(248, 250, 252, 0.8) 100%)' }}>
           <h2>Vista Previa de Tarjeta de Marca</h2>
-          <p className="text-secondary" style={{ fontSize: '0.85rem' }}>Así lucirán las referencias visuales de tu marca en los vouchers y documentos.</p>
+          <p className="text-secondary" style={{ fontSize: '0.85rem' }}>Así lucirán el logo y las referencias visuales de tu marca en los vouchers y documentos.</p>
           
           <div style={{ marginTop: '1rem', padding: '1.5rem', borderRadius: '16px', background: '#ffffff', border: `2px solid ${brandForm.primaryColor}`, boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: brandForm.primaryColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>DOCUMENTO OFICIAL</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: brandForm.primaryColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>COMPROBANTE OFICIAL</span>
+              {brandForm.logoUrl && (
+                <img src={brandForm.logoUrl} alt="Logo Oficial" style={{ maxHeight: 40, maxWidth: 120, objectFit: 'contain' }} />
+              )}
+            </div>
+            
             <h2 style={{ color: brandForm.primaryColor, margin: '0.4rem 0 0.2rem 0', fontSize: '1.4rem' }}>{brandForm.businessName || 'Nombre de tu Empresa'}</h2>
             <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#475569' }}>Administración: <strong>{brandForm.administratorName || 'Nombre Administrador'}</strong></p>
 

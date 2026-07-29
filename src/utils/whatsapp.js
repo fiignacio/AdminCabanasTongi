@@ -23,38 +23,6 @@ export const generateWhatsAppLink = (phone, message) => {
   return `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
 };
 
-export const generateCabinMessage = (res, cabinName, template = 'confirmation', businessName = 'nuestro complejo') => {
-  const deposit = res.depositAmount || 0;
-  const total = res.totalCost || 0;
-  const balance = total - deposit;
-  const client = res.clientName || 'Estimado/a';
-  
-  if (template === 'checkin') {
-    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName}.\n\nTe recordamos que tu fecha de llegada (Check-in) es el *${res.startDate}* en la *${cabinName}*.\n\n¿A qué hora estimas tu llegada para estar atentos?\n¡Nos vemos pronto!`;
-  }
-  
-  if (template === 'checkout') {
-    return `¡Hola *${client}*! 👋\nEsperamos que hayas disfrutado mucho tu estadía en ${businessName}.\n\nTe recordamos que el horario de salida (Check-out) de la *${cabinName}* es mañana a las 11:00 AM.\n¡Gracias por preferirnos! ⭐⭐⭐⭐⭐`;
-  }
-  
-  if (template === 'payment') {
-    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para recordarte que tienes un saldo pendiente por tu reserva en la *${cabinName}*.\n\n💰 *Saldo a pagar:* $${balance.toLocaleString('es-CL')}\n\nPor favor, envíanos el comprobante cuando puedas realizar la transferencia. ¡Muchas gracias!`;
-  }
-  
-  // Default: confirmation
-  let msg = `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para enviarte los detalles de tu reserva en la *${cabinName}*.\n\n`;
-  msg += `📅 *Fecha:* ${res.startDate} al ${res.endDate}\n`;
-  msg += `💰 *Total:* $${total.toLocaleString('es-CL')}\n`;
-  if (deposit > 0) {
-    msg += `✅ *Abono registrado:* $${deposit.toLocaleString('es-CL')}\n`;
-    if (balance > 0) {
-      msg += `⏳ *Saldo pendiente:* $${balance.toLocaleString('es-CL')}\n`;
-    }
-  }
-  msg += `\n¡Quedamos atentos a tu visita!`;
-  return msg;
-};
-
 export const generateCarMessage = (res, carName, template = 'confirmation', businessName = 'nuestra administración') => {
   const deposit = res.depositAmount || 0;
   const total = res.totalCost || 0;
@@ -62,7 +30,11 @@ export const generateCarMessage = (res, carName, template = 'confirmation', busi
   const client = res.clientName || 'Estimado/a';
 
   if (template === 'checkin') {
-    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para coordinar la entrega de tu vehículo arrendado (*${carName}*).\n\nTu fecha de retiro es el *${res.startDate}*.\nPor favor confírmanos la hora exacta a la que pasarás a retirarlo.\n¡Gracias!`;
+    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para recordar que la fecha de entrega de tu vehículo (*${carName}*) está programada para hoy o mañana (*${res.startDate}*).\n\n🚗 *Vehículo:* ${carName}\nPor favor confírmanos tu hora aproximada de llegada para coordinar el retiro.\n¡Te esperamos!`;
+  }
+
+  if (template === 'checkout') {
+    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para recordarte que la fecha de devolución del vehículo (*${carName}*) es el *${res.endDate}*.\n\nPor favor avísanos si necesitas extensión o coordinar el punto de entrega. ¡Muchas gracias!`;
   }
 
   if (template === 'payment') {
@@ -80,6 +52,28 @@ export const generateCarMessage = (res, carName, template = 'confirmation', busi
     }
   }
   msg += `\n¡Gracias por preferirnos!`;
+  return msg;
+};
+
+export const generateTourMessage = (res, tourName, template = 'confirmation', businessName = 'nuestra administración') => {
+  const total = res.totalCost || 0;
+  const client = res.clientName || 'Estimado/a';
+
+  if (template === 'reminder') {
+    return `¡Hola *${client}*! 👋\nTe recordamos de ${businessName} que tu tour *${tourName}* (${res.paxCount || 1} Pax) está agendado para el *${res.date}* a las *${res.time || '09:00'}*.\n\n📍 *Recomendaciones:* Llegar 10 minutos antes, traer calzado cómodo, bloqueador solar y agua.\n\n¿Nos confirmas tu asistencia? ¡Nos vemos pronto! 🧭`;
+  }
+
+  if (template === 'payment') {
+    return `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para recordarte que tienes un saldo pendiente por la reserva del tour *${tourName}*.\n\n💰 *Total:* $${total.toLocaleString('es-CL')}\n\nQuedamos atentos a tu confirmación. ¡Muchas gracias!`;
+  }
+
+  // Default: confirmation
+  let msg = `¡Hola *${client}*! 👋\nTe escribimos de ${businessName} para enviar los detalles de tu reserva de tour.\n\n`;
+  msg += `🧭 *Tour:* ${tourName}\n`;
+  msg += `📅 *Fecha:* ${res.date} a las ${res.time || '09:00'}\n`;
+  msg += `👥 *Pasajeros:* ${res.paxCount || 1} Pax\n`;
+  msg += `💰 *Total:* $${total.toLocaleString('es-CL')}\n\n`;
+  msg += `¡Quedamos muy atentos a tu salida!`;
   return msg;
 };
 

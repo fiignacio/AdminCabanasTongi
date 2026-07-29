@@ -37,8 +37,18 @@ const Sidebar = ({ onClose }) => {
   return (
     <aside className="sidebar glass-panel">
       <div className="sidebar-header">
-        <Car className="logo-icon" size={28} style={{ color: businessConfig?.primaryColor || 'var(--accent-primary)' }} />
-        <h2 style={{ fontSize: '1.1rem', wordBreak: 'break-word' }}>{businessConfig?.businessName || 'Mi Administración'}</h2>
+        {businessConfig?.logoUrl ? (
+          <img 
+            src={businessConfig.logoUrl} 
+            alt="Logo" 
+            style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: '8px', flexShrink: 0 }} 
+          />
+        ) : (
+          <Car className="logo-icon" size={28} style={{ color: businessConfig?.primaryColor || 'var(--accent-primary)' }} />
+        )}
+        <h2 style={{ fontSize: '1.1rem', wordBreak: 'break-word', margin: 0 }}>
+          {businessConfig?.businessName || 'Mi Administración'}
+        </h2>
       </div>
       
       {!isOnline && (
