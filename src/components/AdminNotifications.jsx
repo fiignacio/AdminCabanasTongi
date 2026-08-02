@@ -1,28 +1,49 @@
-import { useState, useEffect } from 'react';
-import { Bell, Car, Compass, MessageCircle, X, CheckCircle2, Volume2, ShieldCheck, Share2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, Car, Compass, MessageCircle, X, CheckCircle2, Volume2, ShieldCheck, Share2, Home, Smartphone, Check } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { formatSafeDate, parseSafeDate } from '../utils/dateUtils';
 import WhatsAppModal from './WhatsAppModal';
 import { generateAdminDailySummaryMessage, generateWhatsAppLink } from '../utils/whatsapp';
+import { registerNativePushSubscription, sendNativeDeviceNotification } from '../utils/pushNotifications';
 import { isToday, isTomorrow } from 'date-fns';
 
 export default function AdminNotifications() {
-  const { carReservations, cars, tourReservations, tours, businessConfig } = useStore();
+  const { reservations, cabins, carReservations, cars, tourReservations, tours, businessConfig, syncConfig } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [pushPermission, setPushPermission] = useState('default');
+  const [isNativeSubscribed, setIsNativeSubscribed] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
+
+  const panelRef = useRef(null);
 
   // Active WhatsApp modal state for client reminders
   const [waModalOpen, setWaModalOpen] = useState(false);
   const [waReservation, setWaReservation] = useState(null);
-  const [waType, setWaType] = useState('car');
+  const [waType, setWaType] = useState('cabin');
   const [waContextName, setWaContextName] = useState('');
 
-  // Check Browser Notification Permission on mount
+  // Check Notification Permission on mount and click outside
   useEffect(() => {
     if ('Notification' in window) {
       setPushPermission(Notification.permission);
     }
-  }, []);
+
+    const handleClickOutside = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
 
   // Play audio chime beep
   const playAudioChime = () => {
@@ -44,24 +65,38 @@ export default function AdminNotifications() {
     }
   };
 
-  // Request system notification permission
-  const requestPushPermission = async () => {
-    if (!('Notification' in window)) {
-      alert('Tu navegador no soporta Notificaciones Push del sistema.');
-      return;
-    }
-    const result = await Notification.requestPermission();
-    setPushPermission(result);
-    if (result === 'granted') {
+  // Request system & native device push notification permission
+  const handleRequestNativePush = async () => {
+    setSubscribing(true);
+    try {
+      await registerNativePushSubscription(syncConfig);
+      setPushPermission('granted');
+      setIsNativeSubscribed(true);
       playAudioChime();
-      new Notification(`🟢 Notificaciones Activas - ${businessConfig?.businessName || 'Administrador'}`, {
-        body: 'Recibirás avisos del sistema directamente en la pantalla de tu computador, tablet o teléfono.',
-        icon: businessConfig?.logoUrl || '/icon-192.png'
-      });
+      
+      await sendNativeDeviceNotification(
+        `🟢 Notificaciones Nativas Activas`,
+        `Recibirás avisos de reservas directamente en tu celular incluso si la app está cerrada.`,
+        syncConfig
+      );
+      alert('¡Notificaciones nativas activadas con éxito! Recibirás avisos en la pantalla de tu celular.');
+    } catch (err) {
+      console.error(err);
+      alert(`Información de notificaciones: ${err.message}`);
+    } finally {
+      setSubscribing(false);
     }
   };
 
-  // Find car pickups or returns for today or tomorrow
+  // 1. Cabañas: Check-In o Check-Out hoy o mañana
+  const upcomingCabins = reservations.filter(res => {
+    if (res.status === 'blocked' || !res.startDate || !res.endDate) return false;
+    const start = parseSafeDate(res.startDate);
+    const end = parseSafeDate(res.endDate);
+    return isToday(start) || isTomorrow(start) || isToday(end) || isTomorrow(end);
+  });
+
+  // 2. Vehículos: Retiros o Devoluciones hoy o mañana
   const upcomingCars = carReservations.filter(res => {
     if (!res.startDate || !res.endDate) return false;
     const start = parseSafeDate(res.startDate);
@@ -69,14 +104,14 @@ export default function AdminNotifications() {
     return isToday(start) || isTomorrow(start) || isToday(end) || isTomorrow(end);
   });
 
-  // Find tour departures for today or tomorrow
+  // 3. Tours: Salidas hoy o mañana
   const upcomingTours = tourReservations.filter(res => {
     if (!res.date) return false;
     const date = parseSafeDate(res.date);
     return isToday(date) || isTomorrow(date);
   });
 
-  const totalAlerts = upcomingCars.length + upcomingTours.length;
+  const totalAlerts = upcomingCabins.length + upcomingCars.length + upcomingTours.length;
 
   const togglePanel = () => {
     const nextState = !isOpen;
@@ -107,7 +142,7 @@ export default function AdminNotifications() {
       const isStartToday = isToday(parseSafeDate(res.startDate));
       return {
         res,
-        carName: car ? `${car.brand} ${car.model}` : 'Vehículo',
+        carName: car ? `${car.brand || ''} ${car.name || car.model || 'Vehículo'}` : 'Vehículo',
         type: isStartToday ? 'Retiro HOY' : 'Retiro Mañana',
         dateStr: formatSafeDate(res.startDate, 'dd/MM')
       };
@@ -136,9 +171,11 @@ export default function AdminNotifications() {
     }
   };
 
+  const isMobileDevice = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   return (
     <>
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }} ref={panelRef}>
         <button 
           className="btn-icon" 
           onClick={togglePanel}
@@ -169,14 +206,14 @@ export default function AdminNotifications() {
           )}
         </button>
 
-        {/* Dropdown Notifications Panel */}
+        {/* Dropdown Notifications Panel (Responsive Mobile / Desktop) */}
         {isOpen && (
           <div style={{
             position: 'absolute',
             top: '48px',
             right: 0,
-            width: '370px',
-            maxHeight: '520px',
+            width: 'min(370px, 90vw)',
+            maxHeight: '540px',
             overflowY: 'auto',
             background: '#ffffff',
             borderRadius: '16px',
@@ -192,7 +229,7 @@ export default function AdminNotifications() {
               <button className="btn-icon" onClick={() => setIsOpen(false)} style={{ padding: '2px' }}><X size={18} /></button>
             </div>
 
-            {/* System Push Notification Banner */}
+            {/* System / Mobile Native Push Notification Banner */}
             <div style={{
               background: pushPermission === 'granted' ? 'rgba(34, 197, 94, 0.08)' : '#f8fafc',
               border: `1px solid ${pushPermission === 'granted' ? 'rgba(34, 197, 94, 0.3)' : '#cbd5e1'}`,
@@ -201,33 +238,38 @@ export default function AdminNotifications() {
               marginBottom: '1rem',
               display: 'flex',
               alignItems: 'center',
-              justify: 'space-between',
+              justifyContent: 'space-between',
               gap: '0.5rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {pushPermission === 'granted' ? (
-                  <ShieldCheck size={18} color="#16a34a" />
+                  <ShieldCheck size={20} color="#16a34a" />
                 ) : (
-                  <Volume2 size={18} color="#64748b" />
+                  <Smartphone size={20} color="var(--accent-primary)" />
                 )}
                 <div>
                   <strong style={{ fontSize: '0.8rem', color: '#0f172a', display: 'block' }}>
-                    {pushPermission === 'granted' ? 'Notificaciones Push Activas' : 'Alertas en Pantalla / Móvil'}
+                    {pushPermission === 'granted' ? 'Notificaciones Push Nativas Activas' : 'Avisos Nativos en Celular'}
                   </strong>
                   <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                    {pushPermission === 'granted' ? 'Recibirás avisos en PC, Tablet y Móvil' : 'Activa notificaciones del sistema'}
+                    {pushPermission === 'granted' ? 'Recibirás avisos aunque la app esté cerrada' : 'Avisos directamente a tu teléfono'}
                   </span>
                 </div>
               </div>
 
-              {pushPermission !== 'granted' && (
+              {pushPermission !== 'granted' ? (
                 <button 
-                  className="btn btn-secondary btn-sm"
-                  onClick={requestPushPermission}
-                  style={{ padding: '4px 10px', fontSize: '0.75rem', fontWeight: '700', whiteSpace: 'nowrap' }}
+                  className="btn btn-primary btn-sm"
+                  onClick={handleRequestNativePush}
+                  disabled={subscribing}
+                  style={{ padding: '6px 10px', fontSize: '0.75rem', fontWeight: '700', whiteSpace: 'nowrap', backgroundColor: 'var(--accent-primary)' }}
                 >
-                  Activar
+                  {subscribing ? 'Activando...' : 'Activar'}
                 </button>
+              ) : (
+                <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <Check size={14} /> Activo
+                </span>
               )}
             </div>
 
@@ -260,6 +302,50 @@ export default function AdminNotifications() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* 🏠 Cabañas: Llegadas / Salidas */}
+                {upcomingCabins.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#556B2F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      🏠 Cabañas (Llegadas / Salidas)
+                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                      {upcomingCabins.map(res => {
+                        const cabin = cabins.find(c => c.id === res.cabinId);
+                        const isStartToday = isToday(parseSafeDate(res.startDate));
+                        const isEndToday = isToday(parseSafeDate(res.endDate));
+
+                        let label = 'Llegada';
+                        let dateText = formatSafeDate(res.startDate, 'dd/MM');
+                        if (isStartToday) label = 'Check-In HOY';
+                        else if (isEndToday) {
+                          label = 'Check-Out HOY';
+                          dateText = formatSafeDate(res.endDate, 'dd/MM');
+                        }
+
+                        return (
+                          <div key={res.id} style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <strong style={{ fontSize: '0.88rem', color: '#0f172a', display: 'block' }}>{res.clientName}</strong>
+                              <span style={{ fontSize: '0.78rem', color: '#475569' }}>{cabin ? cabin.name : 'Cabaña'}</span>
+                              <div style={{ fontSize: '0.72rem', color: isStartToday || isEndToday ? '#16a34a' : '#64748b', fontWeight: '600', marginTop: '2px' }}>
+                                ⚡ {label} ({dateText})
+                              </div>
+                            </div>
+                            <button 
+                              className="btn btn-primary btn-sm"
+                              style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#25D366', borderColor: '#25D366' }}
+                              onClick={() => openWhatsApp(res, 'cabin', cabin ? cabin.name : 'Cabaña')}
+                              title="Enviar aviso de recordatorio al cliente por WhatsApp"
+                            >
+                              <MessageCircle size={14} /> Cliente
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* 🚗 Entregas de Vehículos */}
                 {upcomingCars.length > 0 && (
                   <div>
@@ -274,7 +360,7 @@ export default function AdminNotifications() {
                           <div key={res.id} style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                               <strong style={{ fontSize: '0.88rem', color: '#0f172a', display: 'block' }}>{res.clientName}</strong>
-                              <span style={{ fontSize: '0.78rem', color: '#475569' }}>{car ? `${car.brand} ${car.model}` : 'Vehículo'} ({car ? car.plate : ''})</span>
+                              <span style={{ fontSize: '0.78rem', color: '#475569' }}>{car ? `${car.brand || ''} ${car.name || car.model || 'Vehículo'}` : 'Vehículo'} ({car ? car.plate : ''})</span>
                               <div style={{ fontSize: '0.72rem', color: isStartToday ? '#2563eb' : '#64748b', fontWeight: '600', marginTop: '2px' }}>
                                 {isStartToday ? '⚡ Retiro HOY' : '📅 Retiro Mañana'} ({formatSafeDate(res.startDate, 'dd/MM')})
                               </div>
@@ -282,7 +368,7 @@ export default function AdminNotifications() {
                             <button 
                               className="btn btn-primary btn-sm"
                               style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#25D366', borderColor: '#25D366' }}
-                              onClick={() => openWhatsApp(res, 'car', car ? `${car.brand} ${car.model}` : 'Vehículo')}
+                              onClick={() => openWhatsApp(res, 'car', car ? `${car.name || car.model}` : 'Vehículo')}
                               title="Enviar aviso de recordatorio al cliente por WhatsApp"
                             >
                               <MessageCircle size={14} /> Cliente

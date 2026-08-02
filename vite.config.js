@@ -7,13 +7,13 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      workbox: {
-        maximumFileSizeToCacheInBytes: 5000000, // 5 MB
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5000000
       },
       manifest: {
         name: 'Rent-a-Car & Tours Manager',
