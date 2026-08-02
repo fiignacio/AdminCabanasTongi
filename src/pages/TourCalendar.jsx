@@ -132,7 +132,7 @@ const TourCalendar = () => {
 
   const getReservationsForDay = (tourId, day) => {
     const targetDateStr = formatSafeDate(day, 'yyyy-MM-dd');
-    return tourReservations.filter(res => res.tourId === tourId && res.date === targetDateStr);
+    return (tourReservations || []).filter(res => res.tourId === tourId && res.date === targetDateStr);
   };
 
   const handleResSubmit = (e) => {
@@ -367,7 +367,7 @@ const TourCalendar = () => {
                 </tr>
               </thead>
               <tbody>
-                {tourReservations
+                {(tourReservations || [])
                   .filter(res => {
                     const matchSearch = !searchTerm || res.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) || res.clientPhone?.includes(searchTerm);
                     const matchTour = !selectedTourFilter || res.tourId === selectedTourFilter;

@@ -20,14 +20,14 @@ const Reports = () => {
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
   // Filter Car Reservations by month & year
-  const filteredCarReservations = carReservations.filter(res => {
+  const filteredCarReservations = (carReservations || []).filter(res => {
     if (!res.startDate) return false;
     const date = parseSafeDate(res.startDate);
     return date.getMonth() === Number(selectedMonth) && date.getFullYear() === Number(selectedYear);
   });
 
   // Filter Tour Reservations by month & year
-  const filteredTourReservations = tourReservations.filter(res => {
+  const filteredTourReservations = (tourReservations || []).filter(res => {
     if (!res.date) return false;
     const date = parseSafeDate(res.date);
     return date.getMonth() === Number(selectedMonth) && date.getFullYear() === Number(selectedYear);

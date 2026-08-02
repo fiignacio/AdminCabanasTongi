@@ -178,7 +178,7 @@ const CarCalendar = () => {
   }, [resForm.carId, resForm.startDate, resForm.endDate, cars]);
 
   const getReservationsForDay = (carId, day) => {
-    return carReservations.filter(res => {
+    return (carReservations || []).filter(res => {
       if (res.carId !== carId) return false;
       const start = startOfDay(parseSafeDate(res.startDate));
       const end = startOfDay(parseSafeDate(res.endDate));

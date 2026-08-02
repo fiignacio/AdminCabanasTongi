@@ -89,7 +89,7 @@ export default function AdminNotifications() {
   };
 
   // 1. Cabañas: Check-In o Check-Out hoy o mañana
-  const upcomingCabins = reservations.filter(res => {
+  const upcomingCabins = (reservations || []).filter(res => {
     if (res.status === 'blocked' || !res.startDate || !res.endDate) return false;
     const start = parseSafeDate(res.startDate);
     const end = parseSafeDate(res.endDate);
@@ -97,7 +97,7 @@ export default function AdminNotifications() {
   });
 
   // 2. Vehículos: Retiros o Devoluciones hoy o mañana
-  const upcomingCars = carReservations.filter(res => {
+  const upcomingCars = (carReservations || []).filter(res => {
     if (!res.startDate || !res.endDate) return false;
     const start = parseSafeDate(res.startDate);
     const end = parseSafeDate(res.endDate);
@@ -105,7 +105,7 @@ export default function AdminNotifications() {
   });
 
   // 3. Tours: Salidas hoy o mañana
-  const upcomingTours = tourReservations.filter(res => {
+  const upcomingTours = (tourReservations || []).filter(res => {
     if (!res.date) return false;
     const date = parseSafeDate(res.date);
     return isToday(date) || isTomorrow(date);
