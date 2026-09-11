@@ -376,7 +376,23 @@ export const useStore = create(
         else if (refData) {
           set({ referrers: refData });
         }
+
+        // Auto-detect completed setup if system has existing data
+        const currentState = get();
+        if (!currentState.businessConfig.isSetupCompleted) {
+          if (
+            (carsData && carsData.length > 0) || 
+            (toursData && toursData.length > 0) ||
+            (carResData && carResData.length > 0) ||
+            (tourResData && tourResData.length > 0)
+          ) {
+            set((s) => ({
+              businessConfig: { ...s.businessConfig, isSetupCompleted: true }
+            }));
+          }
+        }
       },
+
 
       // Realtime Sync
       initRealtimeSubscription: () => {

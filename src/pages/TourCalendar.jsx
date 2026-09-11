@@ -142,11 +142,17 @@ const TourCalendar = () => {
       return;
     }
 
-    addTourReservation(resForm);
+    if (editingId) {
+      updateTourReservation(editingId, resForm);
+    } else {
+      addTourReservation(resForm);
+    }
+    setEditingId(null);
     setIsModalOpen(false);
   };
 
   const openNewReservationForDay = (tourId, day) => {
+    setEditingId(null);
     const tour = tours.find(t => t.id === tourId);
     const price = tour ? tour.price : 0;
     setResForm({
@@ -161,6 +167,7 @@ const TourCalendar = () => {
     });
     setIsModalOpen(true);
   };
+
 
   return (
     <div className="card glass-panel calendar-page" style={{ userSelect: 'none' }}>

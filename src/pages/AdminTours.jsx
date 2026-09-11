@@ -75,38 +75,38 @@ const AdminTours = () => {
               <tbody>
                 {tours.map(tour => (
                   <tr key={tour.id}>
-                    <td><strong>{tour.name}</strong></td>
-                    <td style={{ maxWidth: '250px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <td data-label="Tour"><strong>{tour.name}</strong></td>
+                    <td data-label="Descripción" style={{ maxWidth: '250px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                       {tour.description || '-'}
                     </td>
-                    <td>
+                    <td data-label="Tarifa">
                       <strong style={{ color: 'var(--success)' }}>
                         ${Number(tour.price).toLocaleString('es-CL')}
                       </strong>
                     </td>
-                    <td>
+                    <td data-label="Duración">
                       <span style={{ fontSize: '0.85rem' }}>
                         <Clock size={14} style={{ display: 'inline', marginRight: 4 }} />
                         {tour.duration || 'N/A'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Capacidad">
                       <span style={{ fontSize: '0.85rem' }}>
                         <Users size={14} style={{ display: 'inline', marginRight: 4 }} />
                         {tour.maxCapacity} Pax
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       <span className={`status-badge ${tour.isActive ? 'confirmed' : 'blocked'}`}>
                         {tour.isActive ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td>
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: tour.color || '#8e44ad', margin: '0 auto' }}></div>
+                    <td data-label="Color">
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: tour.color || '#8e44ad' }}></div>
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div className="actions">
-                        <button className="btn-icon" title="Editar Tour / Modificar Valores" onClick={() => openEditTour(tour)}>
+                        <button className="btn-icon" title="Editar Tour" onClick={() => openEditTour(tour)}>
                           <Edit2 size={18} />
                         </button>
                         <button className="btn-icon danger" title="Eliminar Tour" onClick={() => handleDeleteTour(tour.id)}>
@@ -116,6 +116,7 @@ const AdminTours = () => {
                     </td>
                   </tr>
                 ))}
+
                 {tours.length === 0 && (
                   <tr>
                     <td colSpan="8" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>

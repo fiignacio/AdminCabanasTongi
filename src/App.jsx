@@ -8,8 +8,6 @@ import Admin from './pages/Admin';
 import AdminCars from './pages/AdminCars';
 import AdminTours from './pages/AdminTours';
 import TourCalendar from './pages/TourCalendar';
-import QuoteGenerator from './pages/QuoteGenerator';
-import PassengerRegistration from './pages/PassengerRegistration';
 import SyncManager from './pages/SyncManager';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -55,10 +53,9 @@ function App() {
             <Route path="cars-settings" element={<AdminCars />} />
             <Route path="tours-settings" element={<AdminTours />} />
             <Route path="sync" element={<SyncManager />} />
-            <Route path="tools/quote" element={<QuoteGenerator />} />
-            <Route path="tools/passengers" element={<PassengerRegistration />} />
           </Route>
         </Route>
+
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/admin/cars-calendar" replace />} />

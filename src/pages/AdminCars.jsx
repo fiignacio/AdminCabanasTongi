@@ -74,10 +74,10 @@ const AdminCars = () => {
               <tbody>
                 {cars.map(car => (
                   <tr key={car.id}>
-                    <td><strong>{car.name}</strong></td>
-                    <td>{car.plate}</td>
-                    <td>${car.dailyRate.toLocaleString('es-CL')}</td>
-                    <td>
+                    <td data-label="Vehículo"><strong>{car.name}</strong></td>
+                    <td data-label="Patente">{car.plate}</td>
+                    <td data-label="Tarifa Diaria">${car.dailyRate.toLocaleString('es-CL')}</td>
+                    <td data-label="Promoción">
                       {car.promoThresholdDays > 0 ? (
                         <span style={{ fontSize: '0.85rem', color: 'var(--success)' }}>
                           Desde {car.promoThresholdDays} días: ${car.promoDailyRate.toLocaleString('es-CL')}/día
@@ -86,22 +86,23 @@ const AdminCars = () => {
                         <span className="text-secondary">-</span>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       <span className={`status-badge ${car.isActive ? 'confirmed' : 'blocked'}`}>
                         {car.isActive ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Color">
                       <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: car.color }}></div>
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div className="actions">
-                        <button className="btn-icon" onClick={() => openEditCar(car)}><Edit2 size={18} /></button>
-                        <button className="btn-icon danger" onClick={() => handleDeleteCar(car.id)}><Trash2 size={18} /></button>
+                        <button className="btn-icon" title="Editar" onClick={() => openEditCar(car)}><Edit2 size={18} /></button>
+                        <button className="btn-icon danger" title="Eliminar" onClick={() => handleDeleteCar(car.id)}><Trash2 size={18} /></button>
                       </div>
                     </td>
                   </tr>
                 ))}
+
               </tbody>
             </table>
           </div>

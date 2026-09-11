@@ -9,7 +9,8 @@ import {
   eachDayOfInterval,
   isWithinInterval,
   startOfDay,
-  isSameDay
+  isSameDay,
+  addDays
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, X, MessageCircle, Edit2, Trash2, Calendar } from 'lucide-react';
@@ -30,7 +31,7 @@ const CarCalendar = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
   const [editingId, setEditingId] = useState(null);
 
-  const { cars, carReservations, addCarReservation, updateCarReservation } = useStore();
+  const { cars, carReservations, addCarReservation, updateCarReservation, deleteCarReservation } = useStore();
   
   const [resForm, setResForm] = useState({
     clientName: '', clientPhone: '', carId: cars[0]?.id || '', startDate: '', endDate: '', status: 'confirmed', totalCost: 0
@@ -51,6 +52,7 @@ const CarCalendar = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(0);
 
   const handleWrapperMouseDown = (e) => {
     if (!gridRef.current) return;
@@ -71,7 +73,20 @@ const CarCalendar = () => {
     setIsPanning(false);
   };
 
-  // Convertir Scroll Vertical (Rueda del Ratón) a Horizontal
+  const handleTouchStart = (e) => {
+    if (!gridRef.current || e.touches.length !== 1) return;
+    setTouchStartX(e.touches[0].clientX);
+    setScrollLeft(gridRef.current.scrollLeft);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!gridRef.current || e.touches.length !== 1) return;
+    const touchX = e.touches[0].clientX;
+    const diff = touchStartX - touchX;
+    gridRef.current.scrollLeft = scrollLeft + diff;
+  };
+
+  // Convertir Scroll Vertical a Horizontal
   useEffect(() => {
     const handleWheel = (e) => {
       if (gridRef.current && e.deltaY !== 0) {
@@ -112,12 +127,10 @@ const CarCalendar = () => {
     tryScroll();
   };
 
-  // Al abrir el calendario, posicionar siempre sobre el día de hoy
   useEffect(() => {
     scrollToToday();
   }, []);
 
-  // Detener Swipe-to-Select si el ratón se levanta fuera
   useEffect(() => {
     const handleGlobalMouseUp = () => {
       if (dragCreate.active) {
@@ -135,6 +148,7 @@ const CarCalendar = () => {
           return;
         }
 
+        setEditingId(null);
         setResForm({
           clientName: '', clientPhone: '', carId: dragCreate.carId, 
           startDate: formatSafeDate(start, 'yyyy-MM-dd'), 
@@ -150,7 +164,6 @@ const CarCalendar = () => {
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [dragCreate]);
 
-  // Auto-calcular costo preservando precio manual si fue modificado
   useEffect(() => {
     if (!resForm.carId || !resForm.startDate || !resForm.endDate) return;
     
@@ -187,6 +200,22 @@ const CarCalendar = () => {
     });
   };
 
+  const openNewReservationForDay = (carId, day) => {
+    setEditingId(null);
+    const startStr = formatSafeDate(day, 'yyyy-MM-dd');
+    const endStr = formatSafeDate(addDays(day, 1), 'yyyy-MM-dd');
+    setResForm({
+      clientName: '', 
+      clientPhone: '', 
+      carId, 
+      startDate: startStr, 
+      endDate: endStr, 
+      status: 'confirmed', 
+      totalCost: 0
+    });
+    setIsModalOpen(true);
+  };
+
   const handleResSubmit = (e) => {
     e.preventDefault();
     if (!resForm.carId) {
@@ -198,6 +227,7 @@ const CarCalendar = () => {
     const end = parseSafeDate(resForm.endDate);
     
     const isOverlapping = carReservations.some(existingRes => {
+      if (existingRes.id === editingId) return false;
       if (existingRes.carId !== resForm.carId) return false;
       const exStart = parseSafeDate(existingRes.startDate);
       const exEnd = parseSafeDate(existingRes.endDate);
@@ -210,6 +240,7 @@ const CarCalendar = () => {
     }
 
     const isAdjacent = carReservations.some(existingRes => {
+      if (existingRes.id === editingId) return false;
       if (existingRes.carId !== resForm.carId) return false;
       const exStart = parseSafeDate(existingRes.startDate);
       const exEnd = parseSafeDate(existingRes.endDate);
@@ -221,8 +252,22 @@ const CarCalendar = () => {
       if (!confirmSave) return;
     }
 
-    addCarReservation(resForm);
+    if (editingId) {
+      updateCarReservation(editingId, resForm);
+    } else {
+      addCarReservation(resForm);
+    }
+    setEditingId(null);
     setIsModalOpen(false);
+  };
+
+  const handleDeleteReservation = () => {
+    if (!editingId) return;
+    if (window.confirm('¿Estás seguro de eliminar esta reserva de vehículo?')) {
+      deleteCarReservation(editingId);
+      setIsModalOpen(false);
+      setEditingId(null);
+    }
   };
 
   // Drag and Drop para Mover Reservas
@@ -289,7 +334,7 @@ const CarCalendar = () => {
 
   // Swipe-to-Select Logic
   const handleMouseDown = (e, carId, day) => {
-    e.stopPropagation(); // Evitar que inicie el paneo (Drag to Scroll)
+    e.stopPropagation();
     setDragCreate({ active: true, carId, startDay: day, endDay: day });
   };
 
@@ -314,8 +359,9 @@ const CarCalendar = () => {
             </button>
           </div>
           <button className="btn btn-primary btn-sm" onClick={() => {
+            setEditingId(null);
             setResForm({
-              clientName: '', clientPhone: '', carId: cars[0]?.id || '', startDate: '', endDate: '', status: 'confirmed', totalCost: 0
+              clientName: '', clientPhone: '', carId: cars[0]?.id || '', startDate: formatSafeDate(new Date(), 'yyyy-MM-dd'), endDate: formatSafeDate(addDays(new Date(), 1), 'yyyy-MM-dd'), status: 'confirmed', totalCost: 0
             });
             setIsModalOpen(true);
           }}>
@@ -342,6 +388,8 @@ const CarCalendar = () => {
         onMouseMove={handleWrapperMouseMove}
         onMouseUp={handleWrapperMouseUpOrLeave}
         onMouseLeave={handleWrapperMouseUpOrLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         style={{ cursor: isPanning ? 'grabbing' : 'auto' }}
       >
         <div className="calendar-grid">
@@ -394,6 +442,7 @@ const CarCalendar = () => {
                       className={`calendar-cell day-cell free ${isTodayCol ? 'today-col' : ''}`}
                       onMouseDown={(e) => handleMouseDown(e, car.id, day)}
                       onMouseEnter={() => handleMouseEnter(car.id, day)}
+                      onClick={() => openNewReservationForDay(car.id, day)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, car.id, day)}
                       style={isBeingDragged ? { backgroundColor: 'rgba(59, 130, 246, 0.2)' } : {}}
@@ -440,6 +489,18 @@ const CarCalendar = () => {
                          if (isEnd) barClasses += ' end-day';
                       }
 
+                      const handleBarClick = (e) => {
+                        e.stopPropagation();
+                        setEditingId(res.id);
+                        setResForm({
+                          ...res,
+                          startDate: formatSafeDate(res.startDate, 'yyyy-MM-dd'),
+                          endDate: formatSafeDate(res.endDate, 'yyyy-MM-dd')
+                        });
+                        setIsModalOpen(true);
+                        setPopover({ visible: false, res: null, x: 0, y: 0 });
+                      };
+
                       return (
                         <div 
                           key={res.id}
@@ -447,17 +508,8 @@ const CarCalendar = () => {
                           style={customStyle}
                           draggable={true}
                           onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingId(res.id);
-                            setResForm({
-                              ...res,
-                              startDate: formatSafeDate(res.startDate, 'yyyy-MM-dd'),
-                              endDate: formatSafeDate(res.endDate, 'yyyy-MM-dd')
-                            });
-                            setIsModalOpen(true);
-                            setPopover({ visible: false, res: null, x: 0, y: 0 });
-                          }}
+                          onClick={handleBarClick}
+                          onTouchEnd={handleBarClick}
                           onDragStart={(e) => handleDragStart(e, res.id)}
                           onMouseEnter={(e) => {
                             if (dragCreate.active) return;
@@ -542,13 +594,13 @@ const CarCalendar = () => {
         document.body
       )}
 
-      {/* Modal Nueva Reserva */}
+      {/* Modal Reserva Vehículo */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content glass-panel" style={{ maxWidth: '500px' }}>
             <div className="modal-header">
-              <h2>Arrendar Vehículo</h2>
-              <button className="btn-icon" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
+              <h2>{editingId ? 'Editar Arriendo' : 'Arrendar Vehículo'}</h2>
+              <button className="btn-icon" onClick={() => { setIsModalOpen(false); setEditingId(null); }}><X size={24} /></button>
             </div>
             <form onSubmit={handleResSubmit}>
               <div className="form-row">
@@ -611,9 +663,22 @@ const CarCalendar = () => {
                 })()}
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-primary">Registrar Arriendo</button>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {editingId ? (
+                  <button 
+                    type="button" 
+                    className="btn" 
+                    style={{ backgroundColor: 'var(--danger)', color: 'white', border: 'none' }}
+                    onClick={handleDeleteReservation}
+                  >
+                    <Trash2 size={16} style={{ marginRight: '6px' }} /> Eliminar
+                  </button>
+                ) : <div></div>}
+                
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => { setIsModalOpen(false); setEditingId(null); }}>Cancelar</button>
+                  <button type="submit" className="btn btn-primary">{editingId ? 'Guardar Cambios' : 'Registrar Arriendo'}</button>
+                </div>
               </div>
             </form>
           </div>
@@ -632,3 +697,4 @@ const CarCalendar = () => {
 };
 
 export default CarCalendar;
+
