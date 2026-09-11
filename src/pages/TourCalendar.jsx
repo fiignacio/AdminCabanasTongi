@@ -193,16 +193,20 @@ const TourCalendar = () => {
             <Plus size={16} /> Agendar Tour
           </button>
           <div className="calendar-controls">
-            <button className="btn-icon" onClick={prevMonth}>
-              <ChevronLeft size={24} color="var(--text-primary)" />
+            <button className="btn-secondary" style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem', fontWeight: 'bold', borderRadius: '8px' }} onClick={scrollToToday}>
+              Hoy
+            </button>
+            <button className="btn-icon" onClick={prevMonth} title="Mes Anterior">
+              <ChevronLeft size={20} color="var(--text-primary)" />
             </button>
             <h2 className="current-month">
               {format(currentDate, 'MMMM yyyy', { locale: es }).toUpperCase()}
             </h2>
-            <button className="btn-icon" onClick={nextMonth}>
-              <ChevronRight size={24} color="var(--text-primary)" />
+            <button className="btn-icon" onClick={nextMonth} title="Mes Siguiente">
+              <ChevronRight size={20} color="var(--text-primary)" />
             </button>
           </div>
+
         </div>
       </div>
 
